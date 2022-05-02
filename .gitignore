@@ -1,0 +1,15 @@
+# Vim files
+.session.vim
+.undodir
+.tasks
+.vimspector.json
+
+# Python files
+.coverage
+*.egg
+*.egg-info
+*cache
+**/__pycache__/
+
+# Sphinx files
+docs/build
