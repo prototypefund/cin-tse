@@ -1,1 +1,5 @@
-from tse.backends.epson import TSE as EpsonTSE
+from typing import Protocol
+
+
+class TSE(Protocol):
+    pass
