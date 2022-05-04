@@ -4,4 +4,7 @@
 class TSE():
     """The TSE protocol implementation for the Epson TSE."""
 
-    pass
+    def __init__(self, host: str, ssl: bool = False) -> None:
+        """Initialize the TSE instance."""
+        self._host = host
+        self._ssl = ssl
