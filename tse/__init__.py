@@ -1,5 +1,6 @@
+"""The tse package."""
 from typing import Protocol
 
 
 class TSE(Protocol):
-    pass
+    """The TSE protocol definition."""
