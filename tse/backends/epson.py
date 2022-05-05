@@ -1,6 +1,7 @@
 """The module for the Epson backend."""
 import socket
 from xml.etree import ElementTree
+from typing import Optional
 from tse import exceptions as tse_ex
 
 
@@ -9,8 +10,8 @@ class TSEHost:
 
     def __init__(self) -> None:
         """Initialize the TSEHost instance."""
-        self._client_id = None
-        self._protocol_version = None
+        self._client_id: Optional[str] = None
+        self._protocol_version: Optional[str] = None
 
     def connect(self, host: str, ssl: bool = False, timeout: int = 3) -> None:
         """Connect to the TSE host."""
@@ -25,9 +26,12 @@ class TSEHost:
 
             response = self._socket.recv(1024)
             root = ElementTree.fromstring(response.decode().rstrip('\x00'))
+            client_id_element = root.find('*/client_id')
+            protocol_version_element = root.find('*/protocol_version')
 
-            self._client_id = root.find('*/client_id').text
-            self._protocol_version = root.find('*/protocol_version').text
+            if client_id_element and protocol_version_element:
+                self._client_id = client_id_element.text
+                self._protocol_version = protocol_version_element.text
 
         except socket.gaierror:
             raise tse_ex.ConnectError(
