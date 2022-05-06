@@ -1,5 +1,6 @@
 """The module for the Epson backend."""
 import socket
+import json
 from xml.etree import ElementTree
 from typing import Optional
 from tse import exceptions as tse_ex
@@ -65,7 +66,7 @@ class _TSEHost:
             xml = xml+'\x00'
             xml = xml.replace('\n', '').replace(' ', '')
             self._socket.send(xml.encode())
-            response = self._socket.recv(1023)
+            response = self._socket.recv(4095)
 
             return response.decode().rstrip('\x00')
 
@@ -116,7 +117,7 @@ class _TSEHost:
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    'unexpected TSE error occures.'
+                    'Unexpected TSE error occures: {code}.'
                 )
 
     def tse_close(self, tse_id: str) -> None:
@@ -147,7 +148,7 @@ class _TSEHost:
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    'unexpected TSE error occures.'
+                    'Unexpected TSE error occures: {code}.'
                 )
 
     def disconnect(self) -> None:
