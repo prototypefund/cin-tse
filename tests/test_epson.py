@@ -99,8 +99,8 @@ open_response = '''
 '''.replace('\n', '').replace(' ', '')
 
 
-class TestTSEHostOpenTse:
-    """Tests for the open_tse method."""
+class TestTSEHostTseOpen:
+    """Tests for the tse_open method."""
 
     def test_tse_not_found_error(self, epson_tse_host_ip, epson_tse_id):
         """A TSENotFoundError is raised."""
@@ -137,3 +137,43 @@ class TestTSEHostOpenTse:
 
         with pytest.raises(tse_ex.TSEOpenError):
             tse_host.tse_open('dsdsdsds')
+
+
+class TestTSEHostTseClose:
+    """Tests for the tse_close method."""
+
+    def test_tse_not_found_error(self, epson_tse_host_ip, epson_tse_id):
+        """A TSENotFoundError is raised."""
+        tse_host = _TSEHost()
+        socket_mock = Mock()
+        socket_mock.recv.return_value = open_response.format(
+            epson_tse_id, 'DEVICE_NOT_FOUND').encode()
+
+        tse_host._socket = socket_mock
+
+        with pytest.raises(tse_ex.TSENotFoundError):
+            tse_host.tse_close('dsdsdsds')
+
+    def test_tse_in_use_error(self, epson_tse_host_ip, epson_tse_id):
+        """A TSEInUseError is raised."""
+        tse_host = _TSEHost()
+        socket_mock = Mock()
+        socket_mock.recv.return_value = open_response.format(
+            epson_tse_id, 'DEVICE_IN_USE').encode()
+
+        tse_host._socket = socket_mock
+
+        with pytest.raises(tse_ex.TSEInUseError):
+            tse_host.tse_close('dsdsdsds')
+
+    def test_tse_open_error(self, epson_tse_host_ip, epson_tse_id):
+        """A TSEOpenError is raised."""
+        tse_host = _TSEHost()
+        socket_mock = Mock()
+        socket_mock.recv.return_value = open_response.format(
+            epson_tse_id, 'DEVICE_OPEN_ERROR').encode()
+
+        tse_host._socket = socket_mock
+
+        with pytest.raises(tse_ex.TSEOpenError):
+            tse_host.tse_close('dsdsdsds')

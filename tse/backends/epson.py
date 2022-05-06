@@ -62,6 +62,8 @@ class _TSEHost:
 
     def _send(self, xml: str) -> str:
         try:
+            xml = xml+'\x00'
+            xml = xml.replace('\n', '').replace(' ', '')
             self._socket.send(xml.encode())
             response = self._socket.recv(1023)
 
@@ -91,19 +93,25 @@ class _TSEHost:
                 <data>
                     <type>type_storage</type>
                 </data>
-            </open_device>\x00
-            '''.format(tse_id).replace('\n', '').replace(' ', '')
+            </open_device>
+            '''.format(tse_id)
 
         root = ElementTree.fromstring(self._send(xml))
         code = root.find('./code').text
 
         match code:
             case 'DEVICE_NOT_FOUND':
-                raise tse_ex.TSENotFoundError()
+                raise tse_ex.TSENotFoundError(
+                    f'The TSE {tse_id} was not found.'
+                )
             case 'DEVICE_IN_USE':
-                raise tse_ex.TSEInUseError()
+                raise tse_ex.TSEInUseError(
+                    'The TSE {tse_id} is in use.'
+                )
             case 'DEVICE_OPEN_ERROR':
-                raise tse_ex.TSEOpenError()
+                raise tse_ex.TSEOpenError(
+                    'The TSE {tse_id} could not be opened.'
+                )
             case 'OK':
                 pass
             case _:
@@ -111,6 +119,36 @@ class _TSEHost:
                     'unexpected TSE error occures.'
                 )
 
+    def tse_close(self, tse_id: str) -> None:
+        """Colse the TES."""
+        xml = '''
+            <close_device>
+                <device_id>{}</device_id>
+            </close_device>
+            '''.format(tse_id)
+
+        root = ElementTree.fromstring(self._send(xml))
+        code = root.find('./code').text
+
+        match code:
+            case 'DEVICE_NOT_FOUND':
+                raise tse_ex.TSENotFoundError(
+                    f'The TSE {tse_id} was not found.'
+                )
+            case 'DEVICE_IN_USE':
+                raise tse_ex.TSEInUseError(
+                    'The TSE {tse_id} is in use.'
+                )
+            case 'DEVICE_OPEN_ERROR':
+                raise tse_ex.TSEOpenError(
+                    'The TSE {tse_id} could not be opened.'
+                )
+            case 'OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    'unexpected TSE error occures.'
+                )
 
     def disconnect(self) -> None:
         """Disconnect the TSE host connection."""
