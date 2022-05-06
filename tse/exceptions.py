@@ -23,3 +23,9 @@ class TSEInUseError(TSEError):
     """Raised if TSE is in use."""
 
     pass
+
+
+class TSEOpenError(TSEError):
+    """Raised if TSE is in use."""
+
+    pass
