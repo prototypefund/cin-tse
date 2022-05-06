@@ -13,6 +13,12 @@ class NotConnectedError(ConnectError):
     pass
 
 
+class NotConnectionClosedError(ConnectError):
+    """Raised if the connection to TSE host was closed."""
+
+    pass
+
+
 class TSEError(Exception):
     """Base exception for all TSE error."""
 
