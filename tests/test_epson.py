@@ -54,7 +54,7 @@ class TestTSEHostConnect:
             tse_host.connect(epson_tse_host_ip)
 
             assert tse_host.client_id == 'sock1857622694'
-            assert tse_host._protocol_version == '2'
+            assert tse_host.protocol_version == '2'
 
     def test_xtmp(self, epson_tse_host_ip):
         tse_host = _TSEHost()

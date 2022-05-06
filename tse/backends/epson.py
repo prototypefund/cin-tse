@@ -17,6 +17,10 @@ class _TSEHost:
     def client_id(self):
         return self._client_id
 
+    @property
+    def protocol_version(self):
+        return self._protocol_version
+
     def connect(self, host: str, ssl: bool = False, timeout: int = 3) -> None:
         """Connect to the TSE host."""
         try:
