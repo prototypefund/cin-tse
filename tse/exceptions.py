@@ -30,4 +30,8 @@ class TSEInUseError(TSEError):
 
 
 class TSEOpenError(TSEError):
-    """Raised if TSE is in use."""
+    """Raised if TSE cannot be opened."""
+
+
+class TSENotOpenError(TSEError):
+    """Raised if TSE is not open."""
