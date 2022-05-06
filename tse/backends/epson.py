@@ -60,13 +60,57 @@ class _TSEHost:
                 'be established.'
             )
 
-    def tse_open(tse_id: str) -> None:
-        """Open the TSE."""
-        pass
+    def _send(self, xml: str) -> str:
+        try:
+            self._socket.send(xml.encode())
+            response = self._socket.recv(1023)
 
-    def tse_close(tse_id: str) -> None:
-        """Colse the TES."""
-        pass
+            return response.decode().rstrip('\x00')
+
+        except AttributeError:
+            raise tse_ex.NotConnectedError(
+                'No connection to TSE host available. Please connect.'
+            )
+
+        except socket.timeout:
+            raise tse_ex.TimeoutError(
+                'The data could not be sent to the TSE host. '
+                'Timeout error occurs.'
+            )
+
+        except OSError:
+            raise tse_ex.ConnectionClosedError(
+                'The connection was closed. Please connect again.'
+            )
+
+    def tse_open(self, tse_id: str) -> None:
+        """Open the TSE."""
+        xml = '''
+            <open_device>
+                <device_id>{}</device_id>
+                <data>
+                    <type>type_storage</type>
+                </data>
+            </open_device>\x00
+            '''.format(tse_id).replace('\n', '').replace(' ', '')
+
+        root = ElementTree.fromstring(self._send(xml))
+        code = root.find('./code').text
+
+        match code:
+            case 'DEVICE_NOT_FOUND':
+                raise tse_ex.TSENotFoundError()
+            case 'DEVICE_IN_USE':
+                raise tse_ex.TSEInUseError()
+            case 'DEVICE_OPEN_ERROR':
+                raise tse_ex.TSEOpenError()
+            case 'OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    'unexpected TSE error occures.'
+                )
+
 
     def disconnect(self) -> None:
         """Disconnect the TSE host connection."""
