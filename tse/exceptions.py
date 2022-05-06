@@ -11,3 +11,7 @@ class TSEError(Exception):
     """Base error for all TSE error."""
 
     pass
+
+
+class TSENotFound(TSEError):
+    """Raise if the TSE is not available."""
