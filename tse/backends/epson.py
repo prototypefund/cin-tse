@@ -25,11 +25,12 @@ class TSEHost:
                 self._socket.connect((host, 8009))
 
             response = self._socket.recv(1024)
+
             root = ElementTree.fromstring(response.decode().rstrip('\x00'))
             client_id_element = root.find('*/client_id')
             protocol_version_element = root.find('*/protocol_version')
 
-            if client_id_element and protocol_version_element:
+            if client_id_element.text and protocol_version_element.text:
                 self._client_id = client_id_element.text
                 self._protocol_version = protocol_version_element.text
 
@@ -50,6 +51,14 @@ class TSEHost:
                 f'The connection to the host "{host}" could not'
                 'be established.'
             )
+
+    def tse_open(tse_id: str) -> None:
+        """Open the TSE."""
+        pass
+
+    def tse_close(tse_id: str) -> None:
+        """Colse the TES."""
+        pass
 
     def disconnect(self) -> None:
         """Disconnect the TSE host connection."""
