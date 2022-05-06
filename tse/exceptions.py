@@ -2,13 +2,19 @@
 
 
 class ConnectError(Exception):
-    """Raised if a connection error occurs."""
+    """Base exception for all connection errors."""
+
+    pass
+
+
+class NotConnectedError(ConnectError):
+    """Raised if there is no connection to TSE host."""
 
     pass
 
 
 class TSEError(Exception):
-    """Base error for all TSE error."""
+    """Base exception for all TSE error."""
 
     pass
 
