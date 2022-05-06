@@ -13,5 +13,13 @@ class TSEError(Exception):
     pass
 
 
-class TSENotFound(TSEError):
+class TSENotFoundError(TSEError):
     """Raise if the TSE is not available."""
+
+    pass
+
+
+class TSEInUseError(TSEError):
+    """Raised if TSE is in use."""
+
+    pass
