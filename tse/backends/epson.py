@@ -5,13 +5,17 @@ from typing import Optional
 from tse import exceptions as tse_ex
 
 
-class TSEHost:
-    """TSEHost class."""
+class _TSEHost:
+    """_TSEHost class."""
 
     def __init__(self) -> None:
         """Initialize the TSEHost instance."""
         self._client_id: Optional[str] = None
         self._protocol_version: Optional[str] = None
+
+    @property
+    def client_id(self):
+        return self._client_id
 
     def connect(self, host: str, ssl: bool = False, timeout: int = 3) -> None:
         """Connect to the TSE host."""
