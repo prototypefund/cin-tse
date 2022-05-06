@@ -10,11 +10,24 @@ def pytest_addoption(parser):
         help='The IP address of the Epson TSE.'
     )
 
+    parser.addoption(
+        '--epson_tse_id',
+        action='store',
+        default='TSE_FDDA56DAA09F7FAC125E58F45945D1E4AC9ED9133F75C310953B632B42BBBA56',
+        help='The IP address of the Epson TSE.'
+    )
+
 
 @pytest.fixture
 def epson_tse_host_ip(pytestconfig):
     """Get the value of command line option --epson_tse_host_ip."""
     return pytestconfig.getoption('epson_tse_host_ip')
+
+
+@pytest.fixture
+def epson_tse_id(pytestconfig):
+    """Get the value of command line option --epson_tse_host_ip."""
+    return pytestconfig.getoption('epson_tse_id')
 
 
 @pytest.fixture(params=[pytest.param(EpsonTSE, marks=pytest.mark.epson)])
