@@ -1,6 +1,6 @@
 """The conftest module for pytest."""
 import pytest
-from tse.backends.epson import TSE as EpsonTSE
+from tse.epson import TSE as EpsonTSE
 
 
 def pytest_addoption(parser):

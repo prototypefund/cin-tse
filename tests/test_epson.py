@@ -3,7 +3,7 @@ import pytest
 import socket
 from unittest.mock import patch, Mock
 from tse import exceptions as tse_ex
-from tse.backends.epson import _TSEHost
+from tse.epson import _TSEHost
 
 
 class TestTSEHostConnect:
@@ -20,7 +20,7 @@ class TestTSEHostConnect:
         """A timeout error occurs."""
         tse_host = _TSEHost()
 
-        with patch('tse.backends.epson.socket.socket') as socket_mock:
+        with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.connect.side_effect = socket.timeout()
 
             with pytest.raises(tse_ex.ConnectError, match='timeout'):
@@ -30,7 +30,7 @@ class TestTSEHostConnect:
         """An unexpected error occurs."""
         tse_host = _TSEHost()
 
-        with patch('tse.backends.epson.socket.socket') as socket_mock:
+        with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.connect.side_effect = Exception()
 
             with pytest.raises(tse_ex.ConnectError, match='connection'):
@@ -40,7 +40,7 @@ class TestTSEHostConnect:
         """No error occurred."""
         tse_host = _TSEHost()
 
-        with patch('tse.backends.epson.socket.socket') as socket_mock:
+        with patch('tse.epson.socket.socket') as socket_mock:
             response = '''
                 <connect>
                     <data>
@@ -71,7 +71,7 @@ class TestTSEHostSend:
         """The connection to TSE host was closed."""
         tse_host = _TSEHost()
 
-        with patch('tse.backends.epson.socket.socket') as socket_mock:
+        with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.recv.side_effect = OSError()
             tse_host._socket = socket_mock
 
@@ -82,7 +82,7 @@ class TestTSEHostSend:
         """A timeout error occurs."""
         tse_host = _TSEHost()
 
-        with patch('tse.backends.epson.socket.socket') as socket_mock:
+        with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.send.side_effect = socket.timeout()
             tse_host._socket = socket_mock
 
