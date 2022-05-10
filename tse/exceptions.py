@@ -29,6 +29,10 @@ class TSEInUseError(TSEError):
     """Raised if TSE is in use."""
 
 
+class TSEIsBusy(TSEError):
+    """Raised if TSE is busy."""
+
+
 class TSEOpenError(TSEError):
     """Raised if TSE cannot be opened."""
 
