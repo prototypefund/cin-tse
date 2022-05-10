@@ -142,6 +142,8 @@ class _TSEHost:
         code = root.find('./data/code').text
         result = root.find('./data/resultdata')
 
+        print(code)
+
         match code:
             case 'ERROR_TIMEOUT':
                 raise tse_ex.TimeoutError(

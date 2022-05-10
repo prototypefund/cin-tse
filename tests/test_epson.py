@@ -142,28 +142,73 @@ class TestTSEHostTseOpen:
 class TestTSEHostTseSend:
     """Tests for the tse_open method."""
 
-    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-        """A TSENotFoundError is raised."""
-        data = {
-            'storage': {
-                'type': 'COMMON',
-                'vendor': ''
-            },
-            'function': 'GetStorageInfo',
-            'input': {},
-            'compress': {
-                'required': False,
-                'type': ''
-            }
-        }
-
+    def test_no_error(self):
+        """No error occurred."""
+        response = '''
+            <device_data>
+                <sequence>0</sequence>
+                <device_id>TSE</device_id>
+                <data>
+                    <type>operateresult</type>
+                    <success>true</success>
+                    <code>SUCCESS</code>
+                    <resultdata>{"test": 123}</resultdata>
+                </data>
+                <data_id>0</data_id>
+            </device_data>
+        '''
         tse_host = _TSEHost()
+        send_mock = Mock()
+        send_mock.return_value = response
+        tse_host._send = send_mock
 
-        tse_host.connect(epson_tse_host_ip)
-        tse_host.tse_open(epson_tse_id)
-        print(tse_host.tse_send(epson_tse_id, data))
-        tse_host.tse_close(epson_tse_id)
-        tse_host.disconnect()
+        result = tse_host.tse_send('', {})
+
+        assert result == {'test': 123}
+
+    def test_timeout_error(self):
+        """A timout error occurred."""
+        response = '''
+            <device_data>
+                <sequence>0</sequence>
+                <device_id>TSE</device_id>
+                <data>
+                    <type>operateresult</type>
+                    <success>true</success>
+                    <code>ERROR_TIMEOUT</code>
+                </data>
+                <data_id>0</data_id>
+            </device_data>
+        '''
+        tse_host = _TSEHost()
+        send_mock = Mock()
+        send_mock.return_value = response
+        tse_host._send = send_mock
+
+        with pytest.raises(tse_ex.TimeoutError):
+            tse_host.tse_send('', {})
+
+    def test_tse_is_busy(self):
+        """A TSEIsBusyError occurred."""
+        response = '''
+            <device_data>
+                <sequence>0</sequence>
+                <device_id>TSE</device_id>
+                <data>
+                    <type>operateresult</type>
+                    <success>true</success>
+                    <code>ERROR_DEVICE_BUSY</code>
+                </data>
+                <data_id>0</data_id>
+            </device_data>
+        '''
+        tse_host = _TSEHost()
+        send_mock = Mock()
+        send_mock.return_value = response
+        tse_host._send = send_mock
+
+        with pytest.raises(tse_ex.TSEIsBusy):
+            tse_host.tse_send('', {})
 
 
 class TestTSEHostTseClose:
@@ -204,3 +249,30 @@ class TestTSEHostTseClose:
 
         with pytest.raises(tse_ex.TSEOpenError):
             tse_host.tse_close('dsdsdsds')
+
+
+# class TestTSEHostTseSend:
+#     """Tests for the tse_open method."""
+#
+#     def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+#         """A TSENotFoundError is raised."""
+#         data = {
+#             'storage': {
+#                 'type': 'COMMON',
+#                 'vendor': ''
+#             },
+#             'function': 'GetStorageInfo',
+#             'input': {},
+#             'compress': {
+#                 'required': False,
+#                 'type': ''
+#             }
+#         }
+#
+#         tse_host = _TSEHost()
+#
+#         tse_host.connect(epson_tse_host_ip)
+#         tse_host.tse_open(epson_tse_id)
+#         print(tse_host.tse_send(epson_tse_id, data))
+#         tse_host.tse_close(epson_tse_id)
+#         tse_host.disconnect()
