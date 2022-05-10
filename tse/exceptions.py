@@ -13,8 +13,8 @@ class ConnectionClosedError(ConnectError):
     """Raised if the connection to TSE host was closed."""
 
 
-class TimeoutError(ConnectError):
-    """Raised if timeout occurs."""
+class ConnectionTimeoutError(ConnectError):
+    """Raised if a connection timeout occurs."""
 
 
 class TSEError(Exception):
@@ -39,3 +39,7 @@ class TSEOpenError(TSEError):
 
 class TSENotOpenError(TSEError):
     """Raised if TSE is not open."""
+
+
+class TSETimeoutError(ConnectError):
+    """Raised if a TSE timeout occurs."""
