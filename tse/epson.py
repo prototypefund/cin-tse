@@ -59,6 +59,29 @@ class _TSEHost:
         return self._protocol_version
 
     def _send(self, xml: str) -> str:
+        r"""
+        Send ePOS device XML data to the Host.
+
+        The method minifies the passed XML data and expands the string
+        with the character *\\x00*. The host expect this character at the
+        end of the sent data.
+
+        Args:
+            xml: The XML data as string.
+
+        Returns:
+            The XML response from the host as string without
+            *\\x00* at the end.
+
+        Raises:
+            tse.exceptions.NotConnectedError: if no connection to TSE host
+                is available.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionClosedError: If the connection to the
+                host was closed.
+
+        """
         try:
             xml = xml+'\x00'
             xml = xml.replace('\n', '').replace(' ', '')
