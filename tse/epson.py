@@ -275,10 +275,20 @@ class _TSEHost:
 
         This method closes the connection to the TSE host and sets
         the *client_id* and *protocol_version* properties to false.
+
+        Raises:
+            tse.exceptions.NotConnectedError: If no connection to the
+                host available.
         """
-        self._socket.close()
-        self._client_id = False
-        self._protocol_version = False
+        try:
+            self._socket.close()
+            self._client_id = False
+            self._protocol_version = False
+
+        except AttributeError:
+            raise tse_ex.NotConnectedError(
+                'No connection to TSE host to close.'
+            )
 
 
 class TSE():
