@@ -68,6 +68,13 @@ class _TSEHost:
             self._socket.send(xml.encode())
             response = self._socket.recv(4095)
 
+            # data = b''
+            # while True:
+            #     data_chunk = client_socket.recv(1024)
+            #     if data_chunk:
+            #          data+=data_chunk
+            #     else:
+            #          break
             return response.decode().rstrip('\x00')
 
         except AttributeError:
@@ -117,7 +124,39 @@ class _TSEHost:
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    'Unexpected TSE error occures: {code}.'
+                    f'Unexpected TSE error occures: {code}.'
+                )
+
+    def tse_send(self, tse_id: str, data: dict, timeout: int = 3) -> dict:
+        xml = '''
+            <device_data>
+                <device_id>{}</device_id>
+                <data>
+                    <type>operate</type>
+                    <timeout>{}</timeout>
+                    <requestdata>{}</requestdata>
+                </data>
+            </device_data>"
+            '''.format(tse_id, timeout*1000, json.dumps(data))
+
+        root = ElementTree.fromstring(self._send(xml))
+        code = root.find('./data/code').text
+        result = root.find('./data/resultdata')
+
+        match code:
+            case 'ERROR_TIMEOUT':
+                raise tse_ex.TimeoutError(
+                    'A timeout error occurred while sending data to the TSE'
+                )
+            case 'ERROR_DEVICE_BUSY':
+                raise tse_ex.TSEIsBusy(
+                    'The tse is busy.'
+                )
+            case 'SUCCESS':
+                return json.loads(result.text)
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.'
                 )
 
     def tse_close(self, tse_id: str) -> None:
@@ -144,11 +183,15 @@ class _TSEHost:
                 raise tse_ex.TSEOpenError(
                     'The TSE {tse_id} could not be opened.'
                 )
+            case 'DEVICE_NOT_OPEN':
+                raise tse_ex.TSENotOpenError(
+                    'The TSE {tse_id} is not open.'
+                )
             case 'OK':
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    'Unexpected TSE error occures: {code}.'
+                    f'Unexpected TSE error occures: {code}.'
                 )
 
     def disconnect(self) -> None:

@@ -139,6 +139,33 @@ class TestTSEHostTseOpen:
             tse_host.tse_open('dsdsdsds')
 
 
+class TestTSEHostTseSend:
+    """Tests for the tse_open method."""
+
+    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+        """A TSENotFoundError is raised."""
+        data = {
+            'storage': {
+                'type': 'COMMON',
+                'vendor': ''
+            },
+            'function': 'GetStorageInfo',
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        tse_host = _TSEHost()
+
+        tse_host.connect(epson_tse_host_ip)
+        tse_host.tse_open(epson_tse_id)
+        print(tse_host.tse_send(epson_tse_id, data))
+        tse_host.tse_close(epson_tse_id)
+        tse_host.disconnect()
+
+
 class TestTSEHostTseClose:
     """Tests for the tse_close method."""
 
