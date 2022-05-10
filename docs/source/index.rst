@@ -10,6 +10,8 @@ Welcome to tse.py's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api/tse
+
 
 
 Indices and tables

@@ -31,7 +31,19 @@ release = '0.1.0'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon'
 ]
+
+autodoc_member_order = 'bysource'
+autodoc_typehints = 'description'
+autodoc_default_options = {
+    'show-inheritance': True,
+    'undoc-members': True,
+    'private-members': True
+}
+autoclass_content = 'class'
+autodoc_class_signature = 'separated'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
