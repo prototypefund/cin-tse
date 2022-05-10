@@ -113,7 +113,22 @@ class _TSEHost:
             )
 
     def connect(self, host: str, ssl: bool = False, timeout: int = 3) -> None:
-        """Connect to the TSE host."""
+        """
+        Connect to the TSE host.
+
+        This method establishes a TCP socket connection to host and sets
+        the *client_id* and *protocol_version* properties.
+
+        Args:
+            host: The hostname or IP address of the host.
+            ssl: If true, a SSL encypted connection is used.
+            timeout: The socket timeout in seconds.
+
+        Raises:
+            tse.exceptions.ConnectionError: If a unexpected error occurred.
+            tse.exceptions.ConnectionTimeoutError: If socket timeout occurred.
+            tse.exceptions.HostnameError: If hostname format is not correct.
+        """
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._socket.settimeout(timeout)
@@ -134,7 +149,7 @@ class _TSEHost:
                 self._protocol_version = protocol_version_element.text
 
         except socket.gaierror:
-            raise tse_ex.ConnectError(
+            raise tse_ex.HostnameError(
                 f'The connection to the host "{host}" could not'
                 'be established. The hostname has no valid format'
             )
@@ -146,7 +161,7 @@ class _TSEHost:
             )
 
         except Exception:
-            raise tse_ex.ConnectError(
+            raise tse_ex.ConnectionError(
                 f'The connection to the host "{host}" could not'
                 'be established.'
             )

@@ -1,19 +1,23 @@
 """The exceptions module of the tse package."""
 
 
-class ConnectError(Exception):
+class ConnectionError(Exception):
     """Base exception for all connection errors."""
 
 
-class NotConnectedError(ConnectError):
+class HostnameError(ConnectionError):
+    """Base exception for all connection errors."""
+
+
+class NotConnectedError(ConnectionError):
     """Raised if there is no connection to TSE host."""
 
 
-class ConnectionClosedError(ConnectError):
+class ConnectionClosedError(ConnectionError):
     """Raised if the connection to TSE host was closed."""
 
 
-class ConnectionTimeoutError(ConnectError):
+class ConnectionTimeoutError(ConnectionError):
     """Raised if a connection timeout occurs."""
 
 
@@ -41,5 +45,5 @@ class TSENotOpenError(TSEError):
     """Raised if TSE is not open."""
 
 
-class TSETimeoutError(ConnectError):
+class TSETimeoutError(TSEError):
     """Raised if a TSE timeout occurs."""

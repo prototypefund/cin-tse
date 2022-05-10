@@ -13,7 +13,7 @@ class TestTSEHostConnect:
         """The hostname has no valid format."""
         tse_host = _TSEHost()
 
-        with pytest.raises(tse_ex.ConnectError, match='hostname'):
+        with pytest.raises(tse_ex.HostnameError):
             tse_host.connect('1d0(///&')
 
     def test_connection_timeout_error(self, epson_tse_host_ip):
@@ -33,7 +33,7 @@ class TestTSEHostConnect:
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.connect.side_effect = Exception()
 
-            with pytest.raises(tse_ex.ConnectError, match='connection'):
+            with pytest.raises(tse_ex.ConnectionError):
                 tse_host.connect(epson_tse_host_ip)
 
     def test_no_error(self, epson_tse_host_ip):
