@@ -66,16 +66,15 @@ class _TSEHost:
             xml = xml+'\x00'
             xml = xml.replace('\n', '').replace(' ', '')
             self._socket.send(xml.encode())
-            response = self._socket.recv(4095)
+            response = ''
 
-            # data = b''
-            # while True:
-            #     data_chunk = client_socket.recv(1024)
-            #     if data_chunk:
-            #          data+=data_chunk
-            #     else:
-            #          break
-            return response.decode().rstrip('\x00')
+            while True:
+                response += self._socket.recv(1024).decode()
+
+                if '\x00' in response:
+                    break
+
+            return response.rstrip('\x00')
 
         except AttributeError:
             raise tse_ex.NotConnectedError(
