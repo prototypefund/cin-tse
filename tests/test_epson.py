@@ -16,14 +16,14 @@ class TestTSEHostConnect:
         with pytest.raises(tse_ex.ConnectError, match='hostname'):
             tse_host.connect('1d0(///&')
 
-    def test_timeout_error(self, epson_tse_host_ip):
-        """A timeout error occurs."""
+    def test_connection_timeout_error(self, epson_tse_host_ip):
+        """A connection timeout error occurs."""
         tse_host = _TSEHost()
 
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.connect.side_effect = socket.timeout()
 
-            with pytest.raises(tse_ex.ConnectError, match='timeout'):
+            with pytest.raises(tse_ex.ConnectionTimeoutError, match='timeout'):
                 tse_host.connect(epson_tse_host_ip)
 
     def test_unexpected_error(self, epson_tse_host_ip):
@@ -78,7 +78,7 @@ class TestTSEHostSend:
             with pytest.raises(tse_ex.ConnectionClosedError):
                 tse_host._send('')
 
-    def test_timeout_error(self):
+    def test_connection_timeout_error(self):
         """A timeout error occurs."""
         tse_host = _TSEHost()
 
@@ -86,7 +86,7 @@ class TestTSEHostSend:
             socket_mock.send.side_effect = socket.timeout()
             tse_host._socket = socket_mock
 
-            with pytest.raises(tse_ex.TimeoutError):
+            with pytest.raises(tse_ex.ConnectionTimeoutError):
                 tse_host._send('')
 
 
@@ -185,7 +185,7 @@ class TestTSEHostTseSend:
         send_mock.return_value = response
         tse_host._send = send_mock
 
-        with pytest.raises(tse_ex.TimeoutError):
+        with pytest.raises(tse_ex.TSETimeoutError):
             tse_host.tse_send('', {})
 
     def test_tse_is_busy(self):
@@ -251,28 +251,28 @@ class TestTSEHostTseClose:
             tse_host.tse_close('dsdsdsds')
 
 
-# class TestTSEHostTseSend:
-#     """Tests for the tse_open method."""
-#
-#     def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-#         """A TSENotFoundError is raised."""
-#         data = {
-#             'storage': {
-#                 'type': 'COMMON',
-#                 'vendor': ''
-#             },
-#             'function': 'GetStorageInfo',
-#             'input': {},
-#             'compress': {
-#                 'required': False,
-#                 'type': ''
-#             }
-#         }
-#
-#         tse_host = _TSEHost()
-#
-#         tse_host.connect(epson_tse_host_ip)
-#         tse_host.tse_open(epson_tse_id)
-#         print(tse_host.tse_send(epson_tse_id, data))
-#         tse_host.tse_close(epson_tse_id)
-#         tse_host.disconnect()
+class TestTSE:
+    """Tests for the tse_open method."""
+
+    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+        """A TSENotFoundError is raised."""
+        data = {
+            'storage': {
+                'type': 'COMMON',
+                'vendor': ''
+            },
+            'function': 'GetStorageInfo',
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        tse_host = _TSEHost()
+
+        tse_host.connect(epson_tse_host_ip)
+        tse_host.tse_open(epson_tse_id)
+        tse_host.tse_send(epson_tse_id, data)
+        tse_host.tse_close(epson_tse_id)
+        tse_host.disconnect()

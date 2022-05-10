@@ -79,7 +79,7 @@ class _TSEHost:
             )
 
         except socket.timeout:
-            raise tse_ex.TimeoutError(
+            raise tse_ex.ConnectionTimeoutError(
                 'The data could not be sent to the TSE host. '
                 'Timeout error occurs.'
             )
@@ -117,7 +117,7 @@ class _TSEHost:
             )
 
         except socket.timeout:
-            raise tse_ex.ConnectError(
+            raise tse_ex.ConnectionTimeoutError(
                 f'The connection to the host "{host}" could not'
                 'be established. A timeout error occurs.'
             )
@@ -182,7 +182,7 @@ class _TSEHost:
 
         match code:
             case 'ERROR_TIMEOUT':
-                raise tse_ex.TimeoutError(
+                raise tse_ex.TSETimeoutError(
                     'A timeout error occurred while sending data to the TSE'
                 )
             case 'ERROR_DEVICE_BUSY':
