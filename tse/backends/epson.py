@@ -7,7 +7,31 @@ from tse import exceptions as tse_ex
 
 
 class _TSEHost:
-    """_TSEHost class."""
+    """
+    This class offers the possibility to communicate with an Epson TSE host.
+
+    The ePOS Device XML interface is used for communication. Any device
+    that provides this interface can be addressed (e.g. the Epson TSE
+    server or Epson TSE printer).
+
+    First, a socket connection to the host must be established. Then the
+    respective TSE can be opened and data can be sent to it. Then the TSE
+    must be closed and the socket can be closed. Normally the socket remains
+    open and only the TSE is opened and closed for writing.
+    If the TSE is used exclusively by only one client, then this can also
+    remain open. Opening and closing before and after writing is only
+    necessary if several clients share a TSE.
+
+    .. code:: python
+
+        tse_host = _TSEHost()
+
+        tse_host.connect(<host_ip>)
+        tse_host.tse_open(<tse_id>)
+        tse_host.tse_send(<tse_id>, <data_dict>)
+        tse_host.tse_close(<tse_id>)
+        tse_host.disconnect()
+    """
 
     def __init__(self) -> None:
         """Initialize the TSEHost instance."""
@@ -15,12 +39,55 @@ class _TSEHost:
         self._protocol_version: Optional[str] = None
 
     @property
-    def client_id(self):
+    def client_id(self) -> Optional[str]:
+        """
+        Get client-ID returnd for the host after connection.
+
+        Returns:
+            The client-ID as string or None if client is not connected.
+        """
         return self._client_id
 
     @property
-    def protocol_version(self):
+    def protocol_version(self) -> Optional[str]:
+        """
+        Get protocol version returnd for the host after connection.
+
+        Returns:
+            The protocol version as string or None if client is not connected.
+        """
         return self._protocol_version
+
+    def _send(self, xml: str) -> str:
+        try:
+            xml = xml+'\x00'
+            xml = xml.replace('\n', '').replace(' ', '')
+            self._socket.send(xml.encode())
+            response = ''
+
+            while True:
+                response += self._socket.recv(1024).decode()
+
+                if '\x00' in response:
+                    break
+
+            return response.rstrip('\x00')
+
+        except AttributeError:
+            raise tse_ex.NotConnectedError(
+                'No connection to TSE host available. Please connect.'
+            )
+
+        except socket.timeout:
+            raise tse_ex.TimeoutError(
+                'The data could not be sent to the TSE host. '
+                'Timeout error occurs.'
+            )
+
+        except OSError:
+            raise tse_ex.ConnectionClosedError(
+                'The connection was closed. Please connect again.'
+            )
 
     def connect(self, host: str, ssl: bool = False, timeout: int = 3) -> None:
         """Connect to the TSE host."""
@@ -59,37 +126,6 @@ class _TSEHost:
             raise tse_ex.ConnectError(
                 f'The connection to the host "{host}" could not'
                 'be established.'
-            )
-
-    def _send(self, xml: str) -> str:
-        try:
-            xml = xml+'\x00'
-            xml = xml.replace('\n', '').replace(' ', '')
-            self._socket.send(xml.encode())
-            response = ''
-
-            while True:
-                response += self._socket.recv(1024).decode()
-
-                if '\x00' in response:
-                    break
-
-            return response.rstrip('\x00')
-
-        except AttributeError:
-            raise tse_ex.NotConnectedError(
-                'No connection to TSE host available. Please connect.'
-            )
-
-        except socket.timeout:
-            raise tse_ex.TimeoutError(
-                'The data could not be sent to the TSE host. '
-                'Timeout error occurs.'
-            )
-
-        except OSError:
-            raise tse_ex.ConnectionClosedError(
-                'The connection was closed. Please connect again.'
             )
 
     def tse_open(self, tse_id: str) -> None:
