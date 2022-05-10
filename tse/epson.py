@@ -121,7 +121,7 @@ class _TSEHost:
 
         Args:
             host: The hostname or IP address of the host.
-            ssl: If true, a SSL encypted connection is used.
+            ssl: If true, a SSL encrypted connection is used.
             timeout: The socket timeout in seconds.
 
         Raises:
@@ -270,8 +270,15 @@ class _TSEHost:
                 )
 
     def disconnect(self) -> None:
-        """Disconnect the TSE host connection."""
+        """
+        Disconnect the TSE host connection.
+
+        This method closes the connection to the TSE host and sets
+        the *client_id* and *protocol_version* properties to false.
+        """
         self._socket.close()
+        self._client_id = False
+        self._protocol_version = False
 
 
 class TSE():
