@@ -16,7 +16,7 @@ class TestTSEHostConnect:
         with pytest.raises(tse_ex.HostnameError):
             tse_host.connect('1d0(///&')
 
-    def test_connection_timeout_error(self, epson_tse_host_ip):
+    def test_connection_timeout_error(self):
         """A connection timeout error occurs."""
         tse_host = _TSEHost()
 
@@ -24,9 +24,9 @@ class TestTSEHostConnect:
             socket_mock.return_value.connect.side_effect = socket.timeout()
 
             with pytest.raises(tse_ex.ConnectionTimeoutError, match='timeout'):
-                tse_host.connect(epson_tse_host_ip)
+                tse_host.connect('')
 
-    def test_unexpected_error(self, epson_tse_host_ip):
+    def test_unexpected_error(self):
         """An unexpected error occurs."""
         tse_host = _TSEHost()
 
@@ -34,9 +34,9 @@ class TestTSEHostConnect:
             socket_mock.return_value.connect.side_effect = Exception()
 
             with pytest.raises(tse_ex.ConnectionError):
-                tse_host.connect(epson_tse_host_ip)
+                tse_host.connect('')
 
-    def test_no_error(self, epson_tse_host_ip):
+    def test_no_error(self):
         """No error occurred."""
         tse_host = _TSEHost()
 
@@ -51,7 +51,7 @@ class TestTSEHostConnect:
                 '''.replace('\n', '').replace(' ', '')
 
             socket_mock.return_value.recv.return_value = response.encode()
-            tse_host.connect(epson_tse_host_ip)
+            tse_host.connect('')
 
             assert tse_host.client_id == 'sock1857622694'
             assert tse_host.protocol_version == '2'
@@ -102,17 +102,17 @@ open_response = '''
 class TestTSEHostTseOpen:
     """Tests for the tse_open method."""
 
-    def test_tse_not_found_error(self, epson_tse_host_ip, epson_tse_id):
+    def test_tse_not_found_error(self):
         """A TSENotFoundError is raised."""
         tse_host = _TSEHost()
         socket_mock = Mock()
         socket_mock.recv.return_value = open_response.format(
-            epson_tse_id, 'DEVICE_NOT_FOUND').encode()
+            'TSE_ID', 'DEVICE_NOT_FOUND').encode()
 
         tse_host._socket = socket_mock
 
         with pytest.raises(tse_ex.TSENotFoundError):
-            tse_host.tse_open('dsdsdsds')
+            tse_host.tse_open('TSE_ID')
 
     def test_tse_in_use_error(self, epson_tse_host_ip, epson_tse_id):
         """A TSEInUseError is raised."""
@@ -124,7 +124,7 @@ class TestTSEHostTseOpen:
         tse_host._socket = socket_mock
 
         with pytest.raises(tse_ex.TSEInUseError):
-            tse_host.tse_open('dsdsdsds')
+            tse_host.tse_open('TSE_ID')
 
     def test_tse_open_error(self, epson_tse_host_ip, epson_tse_id):
         """A TSEOpenError is raised."""
@@ -136,7 +136,7 @@ class TestTSEHostTseOpen:
         tse_host._socket = socket_mock
 
         with pytest.raises(tse_ex.TSEOpenError):
-            tse_host.tse_open('dsdsdsds')
+            tse_host.tse_open('TSE_ID')
 
 
 class TestTSEHostTseSend:
@@ -162,7 +162,7 @@ class TestTSEHostTseSend:
         send_mock.return_value = response
         tse_host._send = send_mock
 
-        result = tse_host.tse_send('', {})
+        result = tse_host.tse_send('TSE_ID', {})
 
         assert result == {'test': 123}
 
@@ -186,7 +186,7 @@ class TestTSEHostTseSend:
         tse_host._send = send_mock
 
         with pytest.raises(tse_ex.TSETimeoutError):
-            tse_host.tse_send('', {})
+            tse_host.tse_send('TSE_ID', {})
 
     def test_tse_is_busy(self):
         """A TSEIsBusyError occurred."""
@@ -208,47 +208,35 @@ class TestTSEHostTseSend:
         tse_host._send = send_mock
 
         with pytest.raises(tse_ex.TSEIsBusy):
-            tse_host.tse_send('', {})
+            tse_host.tse_send('TSE_ID', {})
 
 
 class TestTSEHostTseClose:
     """Tests for the tse_close method."""
 
-    def test_tse_not_found_error(self, epson_tse_host_ip, epson_tse_id):
-        """A TSENotFoundError is raised."""
-        tse_host = _TSEHost()
-        socket_mock = Mock()
-        socket_mock.recv.return_value = open_response.format(
-            epson_tse_id, 'DEVICE_NOT_FOUND').encode()
-
-        tse_host._socket = socket_mock
-
-        with pytest.raises(tse_ex.TSENotFoundError):
-            tse_host.tse_close('dsdsdsds')
-
-    def test_tse_in_use_error(self, epson_tse_host_ip, epson_tse_id):
+    def test_tse_in_use_error(self):
         """A TSEInUseError is raised."""
         tse_host = _TSEHost()
         socket_mock = Mock()
         socket_mock.recv.return_value = open_response.format(
-            epson_tse_id, 'DEVICE_IN_USE').encode()
+            'TSE_ID', 'DEVICE_IN_USE').encode()
 
         tse_host._socket = socket_mock
 
         with pytest.raises(tse_ex.TSEInUseError):
-            tse_host.tse_close('dsdsdsds')
+            tse_host.tse_close('TSE_ID')
 
-    def test_tse_open_error(self, epson_tse_host_ip, epson_tse_id):
+    def test_tse_not_open_error(self):
         """A TSEOpenError is raised."""
         tse_host = _TSEHost()
         socket_mock = Mock()
         socket_mock.recv.return_value = open_response.format(
-            epson_tse_id, 'DEVICE_OPEN_ERROR').encode()
+            'TSE_ID', 'DEVICE_NOT_OPEN').encode()
 
         tse_host._socket = socket_mock
 
-        with pytest.raises(tse_ex.TSEOpenError):
-            tse_host.tse_close('dsdsdsds')
+        with pytest.raises(tse_ex.TSENotOpenError):
+            tse_host.tse_close('TSE_ID')
 
 
 class TestTSE:

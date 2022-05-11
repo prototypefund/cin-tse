@@ -284,7 +284,6 @@ class _TSEHost:
 
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
-            tse.exceptions.TSENotFoundError: If the TSE was not found.
             tse.exceptions.TSENotOpenError: If the TSE in not open.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.NotConnectedError: If no connection to TSE host
@@ -304,10 +303,6 @@ class _TSEHost:
         code = root.find('./code').text
 
         match code:
-            case 'DEVICE_NOT_FOUND':
-                raise tse_ex.TSENotFoundError(
-                    f'The TSE {tse_id} was not found.'
-                )
             case 'DEVICE_IN_USE':
                 raise tse_ex.TSEInUseError(
                     'The TSE {tse_id} is in use.'
