@@ -47,3 +47,7 @@ class TSENotOpenError(TSEError):
 
 class TSETimeoutError(TSEError):
     """Raised if a TSE timeout occurs."""
+
+
+class TSEDataError(TSEError):
+    """Raised if TSEData are not correct."""
