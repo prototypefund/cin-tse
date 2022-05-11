@@ -273,6 +273,6 @@ class TestTSE:
 
         tse_host.connect(epson_tse_host_ip)
         tse_host.tse_open(epson_tse_id)
-        tse_host.tse_send(epson_tse_id, data)
+        print(tse_host.tse_send(epson_tse_id, data))
         tse_host.tse_close(epson_tse_id)
         tse_host.disconnect()

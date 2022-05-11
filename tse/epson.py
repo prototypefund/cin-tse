@@ -74,7 +74,7 @@ class _TSEHost:
             *\\x00* at the end.
 
         Raises:
-            tse.exceptions.NotConnectedError: if no connection to TSE host
+            tse.exceptions.NotConnectedError: If no connection to TSE host
                 is available.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -167,7 +167,25 @@ class _TSEHost:
             )
 
     def tse_open(self, tse_id: str) -> None:
-        """Open the TSE."""
+        """
+        Open the TSE for operations.
+
+        Args:
+            tse_id: The ID of the TSE device.
+
+        Raises:
+            tse.exceptions.TSENotFoundError: If TSE with passed ID was
+                not found.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.NotConnectedError: If no connection to TSE host
+                is available.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionClosedError: If the connection to the
+                host was closed.
+        """
         xml = '''
             <open_device>
                 <device_id>{}</device_id>
