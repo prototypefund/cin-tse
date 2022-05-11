@@ -140,13 +140,20 @@ class _TSEHost:
 
             response = self._socket.recv(1024)
 
-            root = ElementTree.fromstring(response.decode().rstrip('\x00'))
-            client_id_element = root.find('*/client_id')
-            protocol_version_element = root.find('*/protocol_version')
+            try:
+                root = ElementTree.fromstring(response.decode().rstrip('\x00'))
+                client_id = root.find('*/client_id').text  # type: ignore
+                protocol_version = root.find(
+                        '*/protocol_version').text  # type: ignore
 
-            if client_id_element.text and protocol_version_element.text:
-                self._client_id = client_id_element.text
-                self._protocol_version = protocol_version_element.text
+            except Exception:
+                raise tse_ex.TSEDataError(
+                    'The data sent by the TSE are not correct'
+                )
+
+            if client_id and protocol_version:
+                self._client_id = client_id
+                self._protocol_version = protocol_version
 
         except socket.gaierror:
             raise tse_ex.HostnameError(
@@ -267,7 +274,8 @@ class _TSEHost:
         try:
             root = ElementTree.fromstring(self._send(xml))
             code = root.find('./data/code').text  # type: ignore
-            result = root.find('./data/resultdata').text  # type: ignore
+            result = json.loads(
+                    root.find('./data/resultdata').text)  # type: ignore
 
         except Exception:
             raise tse_ex.TSEDataError(
@@ -285,7 +293,7 @@ class _TSEHost:
                     'The tse is busy.'
                 )
             case 'SUCCESS':
-                return json.loads(result)
+                return result
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.'
