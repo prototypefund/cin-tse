@@ -219,6 +219,31 @@ class _TSEHost:
                 )
 
     def tse_send(self, tse_id: str, data: dict, timeout: int = 3) -> dict:
+        """
+        Send data to the TSE JSON API.
+
+        The data passed in the data dictionary is converted to the JSON
+        format and sent to the TSE. The method returns the return value
+        of the TSE.
+
+        Args:
+            tse_id: The ID of the TSE device.
+            data: The data as dictionary.
+            timeout: TSE operation timeout in seconds.
+
+        Raises:
+            tse.exceptions.TSENotFoundError: If TSE with passed ID was
+                not found.
+            tse.exceptions.TSEIsBusy: If the TSE is busy.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.NotConnectedError: If no connection to TSE host
+                is available.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionClosedError: If the connection to the
+                host was closed.
+        """
         xml = '''
             <device_data>
                 <device_id>{}</device_id>
