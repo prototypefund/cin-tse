@@ -259,8 +259,6 @@ class _TSEHost:
         code = root.find('./data/code').text
         result = root.find('./data/resultdata')
 
-        print(code)
-
         match code:
             case 'ERROR_TIMEOUT':
                 raise tse_ex.TSETimeoutError(
@@ -278,7 +276,24 @@ class _TSEHost:
                 )
 
     def tse_close(self, tse_id: str) -> None:
-        """Colse the TES."""
+        """
+        Close the TSE device.
+
+        Args:
+            tse_id: The ID of the TSE device.
+
+        Raises:
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSENotFoundError: If the TSE was not found.
+            tse.exceptions.TSENotOpenError: If the TSE in not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.NotConnectedError: If no connection to TSE host
+                is available.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionClosedError: If the connection to the
+                host was closed.
+        """
         xml = '''
             <close_device>
                 <device_id>{}</device_id>
@@ -296,10 +311,6 @@ class _TSEHost:
             case 'DEVICE_IN_USE':
                 raise tse_ex.TSEInUseError(
                     'The TSE {tse_id} is in use.'
-                )
-            case 'DEVICE_OPEN_ERROR':
-                raise tse_ex.TSEOpenError(
-                    'The TSE {tse_id} could not be opened.'
                 )
             case 'DEVICE_NOT_OPEN':
                 raise tse_ex.TSENotOpenError(
