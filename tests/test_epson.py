@@ -138,6 +138,18 @@ class TestTSEHostTseOpen:
         with pytest.raises(tse_ex.TSEOpenError):
             tse_host.tse_open('TSE_ID')
 
+    def test_data_error(self):
+        """A TSEDataError occurred."""
+        response = ''
+
+        tse_host = _TSEHost()
+        send_mock = Mock()
+        send_mock.return_value = response
+        tse_host._send = send_mock
+
+        with pytest.raises(tse_ex.TSEDataError):
+            tse_host.tse_open('TSE_ID')
+
 
 class TestTSEHostTseSend:
     """Tests for the tse_open method."""
@@ -176,6 +188,7 @@ class TestTSEHostTseSend:
                     <type>operateresult</type>
                     <success>true</success>
                     <code>ERROR_TIMEOUT</code>
+                    <resultdata></resultdata>
                 </data>
                 <data_id>0</data_id>
             </device_data>
@@ -198,6 +211,7 @@ class TestTSEHostTseSend:
                     <type>operateresult</type>
                     <success>true</success>
                     <code>ERROR_DEVICE_BUSY</code>
+                    <resultdata></resultdata>
                 </data>
                 <data_id>0</data_id>
             </device_data>
@@ -208,6 +222,18 @@ class TestTSEHostTseSend:
         tse_host._send = send_mock
 
         with pytest.raises(tse_ex.TSEIsBusy):
+            tse_host.tse_send('TSE_ID', {})
+
+    def test_data_error(self):
+        """A TSEDataError occurred."""
+        response = ''
+
+        tse_host = _TSEHost()
+        send_mock = Mock()
+        send_mock.return_value = response
+        tse_host._send = send_mock
+
+        with pytest.raises(tse_ex.TSEDataError):
             tse_host.tse_send('TSE_ID', {})
 
 
@@ -236,6 +262,18 @@ class TestTSEHostTseClose:
         tse_host._socket = socket_mock
 
         with pytest.raises(tse_ex.TSENotOpenError):
+            tse_host.tse_close('TSE_ID')
+
+    def test_data_error(self):
+        """A TSEDataError occurred."""
+        response = ''
+
+        tse_host = _TSEHost()
+        send_mock = Mock()
+        send_mock.return_value = response
+        tse_host._send = send_mock
+
+        with pytest.raises(tse_ex.TSEDataError):
             tse_host.tse_close('TSE_ID')
 
 

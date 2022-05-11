@@ -178,6 +178,8 @@ class _TSEHost:
                 not found.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEDataError: If data sent by the TSE are
+                not correct.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.NotConnectedError: If no connection to TSE host
                 is available.
@@ -195,8 +197,14 @@ class _TSEHost:
             </open_device>
             '''.format(tse_id)
 
-        root = ElementTree.fromstring(self._send(xml))
-        code = root.find('./code').text
+        try:
+            root = ElementTree.fromstring(self._send(xml))
+            code = root.find('./code').text  # type: ignore
+
+        except Exception:
+            raise tse_ex.TSEDataError(
+                'The data sent by the TSE are not correct'
+            )
 
         match code:
             case 'DEVICE_NOT_FOUND':
@@ -237,6 +245,8 @@ class _TSEHost:
             tse.exceptions.TSEIsBusy: If the TSE is busy.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.TSEDataError: If data sent by the TSE are
+                not correct.
             tse.exceptions.NotConnectedError: If no connection to TSE host
                 is available.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
@@ -254,22 +264,28 @@ class _TSEHost:
                 </data>
             </device_data>"
             '''.format(tse_id, timeout*1000, json.dumps(data))
+        try:
+            root = ElementTree.fromstring(self._send(xml))
+            code = root.find('./data/code').text  # type: ignore
+            result = root.find('./data/resultdata').text  # type: ignore
 
-        root = ElementTree.fromstring(self._send(xml))
-        code = root.find('./data/code').text
-        result = root.find('./data/resultdata')
+        except Exception:
+            raise tse_ex.TSEDataError(
+                'The data sent by the TSE are not correct'
+            )
 
         match code:
             case 'ERROR_TIMEOUT':
                 raise tse_ex.TSETimeoutError(
-                    'A timeout error occurred while sending data to the TSE'
+                    'A timeout error occurred while sending data to '
+                    'the TSE'
                 )
             case 'ERROR_DEVICE_BUSY':
                 raise tse_ex.TSEIsBusy(
                     'The tse is busy.'
                 )
             case 'SUCCESS':
-                return json.loads(result.text)
+                return json.loads(result)
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.'
@@ -285,6 +301,8 @@ class _TSEHost:
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSENotOpenError: If the TSE in not open.
+            tse.exceptions.TSEDataError: If data sent by the TSE are
+                not correct.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.NotConnectedError: If no connection to TSE host
                 is available.
@@ -298,9 +316,14 @@ class _TSEHost:
                 <device_id>{}</device_id>
             </close_device>
             '''.format(tse_id)
+        try:
+            root = ElementTree.fromstring(self._send(xml))
+            code = root.find('./code').text  # type: ignore
 
-        root = ElementTree.fromstring(self._send(xml))
-        code = root.find('./code').text
+        except Exception:
+            raise tse_ex.TSEDataError(
+                'The data sent by the TSE are not correct'
+            )
 
         match code:
             case 'DEVICE_IN_USE':
@@ -331,8 +354,8 @@ class _TSEHost:
         """
         try:
             self._socket.close()
-            self._client_id = False
-            self._protocol_version = False
+            self._client_id = None
+            self._protocol_version = None
 
         except AttributeError:
             raise tse_ex.NotConnectedError(
