@@ -189,7 +189,7 @@ class TestTSEHostTseSend:
                     <type>operateresult</type>
                     <success>true</success>
                     <code>ERROR_TIMEOUT</code>
-                    <resultdata></resultdata>
+                    <resultdata>{}</resultdata>
                 </data>
                 <data_id>0</data_id>
             </device_data>
@@ -212,7 +212,7 @@ class TestTSEHostTseSend:
                     <type>operateresult</type>
                     <success>true</success>
                     <code>ERROR_DEVICE_BUSY</code>
-                    <resultdata></resultdata>
+                    <resultdata>{}</resultdata>
                 </data>
                 <data_id>0</data_id>
             </device_data>
@@ -290,7 +290,7 @@ class TestTSEInfo:
                     'dataIntegrity': {
                         'healthStatus': 'PASS',
                         'uncorrectableECCErrors': 0
-                     # },
+                     },
                     'eraseLifetimeStatus': {
                         'healthStatus': 'PASS',
                         'remainingEraseCounts': 100
@@ -373,20 +373,8 @@ class TestTSEInfo:
         assert tse_info.needs_self_test
         assert tse_info.api_version == '65792'
 
-        # data = {
-        #     'storage': {
-        #         'type': 'COMMON',
-        #         'vendor': ''
-        #     },
-        #     'function': 'GetStorageInfo',
-        #     'input': {},
-        #     'compress': {
-        #         'required': False,
-        #         'type': ''
-        #     }
-        # }
-        # tse_host.connect(epson_tse_host_ip)
-        # tse_host.tse_open(epson_tse_id)
-        # print(tse_host.tse_send(epson_tse_id, data))
-        # tse_host.tse_close(epson_tse_id)
-        # tse_host.disconnect()
+    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+        tse = TSE(epson_tse_id, epson_tse_host_ip)
+        tse.open()
+        print(tse.info)
+        tse.close()
