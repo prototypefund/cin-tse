@@ -114,7 +114,7 @@ class _TSEHost:
                 'The connection was closed. Please connect again.'
             )
 
-    def connect(self, host: str, ssl: bool = False, timeout: int = 3) -> None:
+    def connect(self, host: str, ssl: bool = False, timeout: int = 120) -> None:
         """
         Connect to the TSE host.
 
@@ -376,11 +376,15 @@ class _TSEHost:
 class TSE():
     """The TSE protocol implementation for the Epson TSE."""
 
-    def __init__(self, tse_id: str, host: str, ssl: bool = False, timeout: int = 3) -> None:
+    def __init__(
+            self, tse_id: str, host: str,
+            ssl: bool = False, timeout: int = 3
+            ) -> None:
         """Initialize the TSE instance."""
         self._tse_host = _TSEHost()
-        self._tse_host.connect(host, ssl, timeout)
+        self._tse_host.connect(host, ssl, timeout=120)
         self._tse_id = tse_id
+        self._timeout = timeout
 
     def open(self):
         """
@@ -446,6 +450,25 @@ class TSE():
         )
 
         return info
+
+    def run_self_test(self):
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'RunTSESelfTest',
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        return result
 
     def close(self):
         """

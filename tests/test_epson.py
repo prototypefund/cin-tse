@@ -376,5 +376,5 @@ class TestTSEInfo:
     def test_tmp(self, epson_tse_host_ip, epson_tse_id):
         tse = TSE(epson_tse_id, epson_tse_host_ip)
         tse.open()
-        print(tse.info)
+        print(tse.run_self_test())
         tse.close()
