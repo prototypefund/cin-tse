@@ -1,9 +1,11 @@
 """The module for the Epson backend."""
 import socket
 import json
+from datetime import datetime
 from xml.etree import ElementTree
 from typing import Optional
 from tse import exceptions as tse_ex
+from tse import TSEInfo, TSEState
 
 
 class _TSEHost:
@@ -374,7 +376,86 @@ class _TSEHost:
 class TSE():
     """The TSE protocol implementation for the Epson TSE."""
 
-    def __init__(self, host: str, ssl: bool = False) -> None:
+    def __init__(self, tse_id: str, host: str, ssl: bool = False, timeout: int = 3) -> None:
         """Initialize the TSE instance."""
-        self._host = host
-        self._ssl = ssl
+        self._tse_host = _TSEHost()
+        self._tse_host.connect(host, ssl, timeout)
+        self._tse_id = tse_id
+
+    def open(self):
+        """
+        Open the TSE device.
+
+        Args:
+            tse_id: The ID of the TSE device.
+        """
+        self._tse_host.tse_open(self._tse_id)
+
+    @property
+    def info(self):
+        """Get a TSEInfo object."""
+        data = {
+            'storage': {
+                'type': 'COMMON',
+                'vendor': ''
+            },
+            'function': 'GetStorageInfo',
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(self._tse_id, data)
+        tse_info = result['output']['tseInformation']
+        state_data = tse_info['tseInitializationState']
+        certificate_expiration_date = datetime.strptime(
+            tse_info['certificateExpirationDate'], '%Y-%m-%dT%H:%M:%S%z'
+        )
+        needs_self_test = not tse_info['hasPassedSelfTest']
+        api_version = str(tse_info['softwareVersion'])
+
+        match state_data:
+            case 'INITIALIZED':
+                state = TSEState.INITIALIZED
+            case 'UNINITIALIZED':
+                state = TSEState.UNINITIALIZED
+            case 'DECOMMISSIONED':
+                state = TSEState.DECOMMISSIONED
+
+        info = TSEInfo(
+            public_key=tse_info['tsePublicKey'],
+            model_name=tse_info['vendorType'],
+            state=state,
+            has_valid_time=tse_info['hasValidTime'],
+            certificate_id=tse_info['tseDescription'],
+            certificate_expiration_date=certificate_expiration_date,
+            signature_algorithm=tse_info['signatureAlgorithm'],
+            unique_id=tse_info['cdcId'],
+            signature_counter=tse_info['createdSignatures'],
+            remaining_signatures=tse_info['remainingSignatures'],
+            max_signatures=tse_info['maxSignatures'],
+            registered_clients=tse_info['registeredClients'],
+            max_registered_clients=tse_info['maxRegisteredClients'],
+            serial_number=tse_info['serialNumber'],
+            max_started_transactions=tse_info['maxStartedTransactions'],
+            tar_export_size=tse_info['tarExportSize'],
+            needs_self_test=needs_self_test,
+            api_version=api_version,
+        )
+
+        return info
+
+    def close(self):
+        """
+        Close the TSE device.
+
+        Args:
+            tse_id: The ID of the TSE device.
+        """
+        self._tse_host.tse_close(self._tse_id)
+
+    def __del__(self):
+        """Delete the instance."""
+        self._tse_host.disconnect()

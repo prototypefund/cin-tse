@@ -1,9 +1,10 @@
 """Tests for the Epson TSE backend."""
 import pytest
 import socket
+from datetime import datetime, timezone
 from unittest.mock import patch, Mock
-from tse import exceptions as tse_ex
-from tse.epson import _TSEHost
+from tse import exceptions as tse_ex, TSEState
+from tse.epson import _TSEHost, TSE
 
 
 class TestTSEHostConnect:
@@ -277,28 +278,115 @@ class TestTSEHostTseClose:
             tse_host.tse_close('TSE_ID')
 
 
-class TestTSE:
-    """Tests for the tse_open method."""
+class TestTSEInfo:
+    """Tests for the info property of TSE class."""
 
-    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-        """A TSENotFoundError is raised."""
+    def test_correct_info_object(self):
+        """A correct TSEInfo instatnce returned."""
         data = {
-            'storage': {
-                'type': 'COMMON',
-                'vendor': ''
-            },
             'function': 'GetStorageInfo',
-            'input': {},
-            'compress': {
-                'required': False,
-                'type': ''
-            }
+            'output': {
+                'smartInformation': {
+                    'dataIntegrity': {
+                        'healthStatus': 'PASS',
+                        'uncorrectableECCErrors': 0
+                     # },
+                    'eraseLifetimeStatus': {
+                        'healthStatus': 'PASS',
+                        'remainingEraseCounts': 100
+                    },
+                    'isReplacementNeeded': False,
+                    'remainingTenYearsDataRetention': 98,
+                    'spareBlockStatus': {
+                        'healthStatus': 'PASS',
+                        'remainingSpareBlocks': 100
+                    },
+                    'tseHealth': 'PASS'
+                },
+                'tseInformation': {
+                    'cdcHash': '39b354cd774d45f1496e5fcb72f33e8316aea5f122be'
+                    '96df4663fc6028df9f67',
+                    'cdcId': 'U228111A9EFDDA56DA',
+                    'certificateExpirationDate': '2022-08-11T23:59:59Z',
+                    'createdSignatures': 0,
+                    'hardwareVersion': 65540,
+                    'hasPassedSelfTest': False,
+                    'hasValidTime': False,
+                    'isExportEnabledIfCspTestFails': False,
+                    'isTSEUnlocked': False,
+                    'isTransactionInProgress': False,
+                    'lastExportExecutedDate': 'No Last Export Information',
+                    'maxRegisteredClients': 100,
+                    'maxSignatures': 20000000,
+                    'maxStartedTransactions': 512,
+                    'maxUpdateDelay': 45,
+                    'registeredClients': 0,
+                    'remainingSignatures': 20000000,
+                    'serialNumber': '/dpW2qCff6wSXlj0WUXR5Kye2RM/dcMQlTtjK0'
+                    'K7ulY=',
+                    'signatureAlgorithm': 'ecdsa-plain-SHA384',
+                    'softwareVersion': 65792,
+                    'startedTransactions': 0,
+                    'tarExportSize': 0,
+                    'timeUntilNextSelfTest': 90000,
+                    'tseCapacity': 13631488,
+                    'tseCurrentSize': 0,
+                    'tseDescription': 'BSI-K-TR-0373',
+                    'tseInitializationState': 'UNINITIALIZED',
+                    'tsePublicKey': 'BGsUxY6UtXt+TEWfCq/rdA5RA2VSJB4SaKRx4xlo'
+                    'Ha8cP8Ub/N7k8XFUrJPnuJlgIYq1ng+xptRUkoWU6NtT8xdpUL2OUPrs'
+                    'i38Kj3s8EUKvvY8IFC+YRTVY5ttor+HHJg==',
+                    'vendorType': 'TSE1'
+                }
+            },
+            'result': 'EXECUTION_OK'
         }
 
-        tse_host = _TSEHost()
+        with patch('tse.epson._TSEHost.connect', return_value=None):
+            with patch('tse.epson._TSEHost.disconnect', return_value=None):
+                with patch('tse.epson._TSEHost.tse_send', return_value=data):
+                    tse = TSE('TSE_ID', '10.0.0.2')
+                    tse_info = tse.info
+                    del tse
 
-        tse_host.connect(epson_tse_host_ip)
-        tse_host.tse_open(epson_tse_id)
-        print(tse_host.tse_send(epson_tse_id, data))
-        tse_host.tse_close(epson_tse_id)
-        tse_host.disconnect()
+        assert tse_info.public_key ==\
+            'BGsUxY6UtXt+TEWfCq/rdA5RA2VSJB4SaKRx4xloHa8cP8Ub/N7k8XFUrJPnuJl'\
+            'gIYq1ng+xptRUkoWU6NtT8xdpUL2OUPrsi38Kj3s8EUKvvY8IFC+YRTVY5ttor+'\
+            'HHJg=='
+        assert tse_info.model_name == 'TSE1'
+        assert tse_info.state == TSEState.UNINITIALIZED
+        assert not tse_info.has_valid_time
+        assert tse_info.certificate_id == 'BSI-K-TR-0373'
+        assert tse_info.certificate_expiration_date ==\
+            datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
+        assert tse_info.unique_id == 'U228111A9EFDDA56DA'
+        assert tse_info.serial_number ==\
+            '/dpW2qCff6wSXlj0WUXR5Kye2RM/dcMQlTtjK0K7ulY='
+        assert tse_info.signature_algorithm == 'ecdsa-plain-SHA384'
+        assert tse_info.signature_counter == 0
+        assert tse_info.remaining_signatures == 20000000
+        assert tse_info.max_signatures == 20000000
+        assert tse_info.registered_clients == 0
+        assert tse_info.max_registered_clients == 100
+        assert tse_info.max_started_transactions == 512
+        assert tse_info.tar_export_size == 0
+        assert tse_info.needs_self_test
+        assert tse_info.api_version == '65792'
+
+        # data = {
+        #     'storage': {
+        #         'type': 'COMMON',
+        #         'vendor': ''
+        #     },
+        #     'function': 'GetStorageInfo',
+        #     'input': {},
+        #     'compress': {
+        #         'required': False,
+        #         'type': ''
+        #     }
+        # }
+        # tse_host.connect(epson_tse_host_ip)
+        # tse_host.tse_open(epson_tse_id)
+        # print(tse_host.tse_send(epson_tse_id, data))
+        # tse_host.tse_close(epson_tse_id)
+        # tse_host.disconnect()
