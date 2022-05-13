@@ -411,7 +411,9 @@ class TSE():
             }
         }
 
-        result = self._tse_host.tse_send(self._tse_id, data)
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=self._timeout
+        )
         tse_info = result['output']['tseInformation']
         state_data = tse_info['tseInitializationState']
         certificate_expiration_date = datetime.strptime(
