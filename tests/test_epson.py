@@ -373,8 +373,44 @@ class TestTSEInfo:
         assert tse_info.needs_self_test
         assert tse_info.api_version == '65792'
 
-    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-        tse = TSE(epson_tse_id, epson_tse_host_ip)
-        tse.open()
-        print(tse.run_self_test())
-        tse.close()
+
+class TestTSEInitialize:
+    """Tests for the initialize method of TSE class."""
+
+    def test_puk_too_long(self, epson_tse_host_ip, epson_tse_id):
+        with patch('tse.epson._TSEHost.connect', return_value=None):
+            with patch('tse.epson._TSEHost.disconnect', return_value=None):
+                tse = TSE('TSE_ID', '10.0.0.2')
+
+                with pytest.raises(ValueError):
+                    tse.initialize('1234567', '12345', '54321')
+
+                del tse
+
+    def test_admin_pin_too_long(self, epson_tse_host_ip, epson_tse_id):
+        with patch('tse.epson._TSEHost.connect', return_value=None):
+            with patch('tse.epson._TSEHost.disconnect', return_value=None):
+                tse = TSE('TSE_ID', '10.0.0.2')
+
+                with pytest.raises(ValueError):
+                    tse.initialize('123456', '123456', '54321')
+
+                del tse
+
+    def test_time_admin_pin_too_long(self, epson_tse_host_ip, epson_tse_id):
+        with patch('tse.epson._TSEHost.connect', return_value=None):
+            with patch('tse.epson._TSEHost.disconnect', return_value=None):
+                tse = TSE('TSE_ID', '10.0.0.2')
+
+                with pytest.raises(ValueError):
+                    tse.initialize('123456', '12345', '654321')
+
+                del tse
+
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #     # print(tse._factory_reset())
+    #     # print(tse.setup('111111', '222222', '333333'))
+    #     # print(tse.run_self_test())
+    #     tse.close()
