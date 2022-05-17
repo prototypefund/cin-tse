@@ -504,6 +504,40 @@ class TSE():
 
         return result
 
+    def factory_reset(self) -> None:
+        """
+        Reset the TSE device.
+
+        You need to reboot the printer afterwards. In case of the TSE
+        Server, please power cycle the TSE by removing and reinserting it.
+
+        Args:
+            puk: The PUK of the TSE device.
+            admin_pin: The Pin of the Admin role.
+            time_admin_pin: The PIN of the Time Admin role.
+
+        Raise:
+            ValueError: If the PUK or PIN is too long.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'FactoryReset',
+            'input': {
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        return result
+
     def run_self_test(self):
         data = {
             'storage': {
