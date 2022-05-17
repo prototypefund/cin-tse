@@ -382,7 +382,7 @@ class TestTSEInitialize:
             with patch('tse.epson._TSEHost.disconnect', return_value=None):
                 tse = TSE('TSE_ID', '10.0.0.2')
 
-                with pytest.raises(ValueError):
+                with pytest.raises(ValueError, match='PUK'):
                     tse.initialize('1234567', '12345', '54321')
 
                 del tse
@@ -392,7 +392,7 @@ class TestTSEInitialize:
             with patch('tse.epson._TSEHost.disconnect', return_value=None):
                 tse = TSE('TSE_ID', '10.0.0.2')
 
-                with pytest.raises(ValueError):
+                with pytest.raises(ValueError, match='Admin PIN'):
                     tse.initialize('123456', '123456', '54321')
 
                 del tse
@@ -402,7 +402,7 @@ class TestTSEInitialize:
             with patch('tse.epson._TSEHost.disconnect', return_value=None):
                 tse = TSE('TSE_ID', '10.0.0.2')
 
-                with pytest.raises(ValueError):
+                with pytest.raises(ValueError, match='Time Admin PIN'):
                     tse.initialize('123456', '12345', '654321')
 
                 del tse
