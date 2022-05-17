@@ -222,7 +222,7 @@ class _TSEHost:
                 )
             case 'DEVICE_IN_USE':
                 raise tse_ex.TSEInUseError(
-                    'The TSE {tse_id} is in use.'
+                    f'The TSE {tse_id} is in use.'
                 )
             case 'DEVICE_OPEN_ERROR':
                 raise tse_ex.TSEOpenError(
@@ -452,6 +452,57 @@ class TSE():
         )
 
         return info
+
+    def initialize(
+            self, puk: str,
+            admin_pin: str,
+            time_admin_pin: str
+            ) -> None:
+        """
+        Initialize the TSE device.
+
+        The maximum length of the PUK is 6 characters and the maximum length
+        for PINs is 5 characters.
+
+        Args:
+            puk: The PUK of the TSE device.
+            admin_pin: The Pin of the Admin role.
+            time_admin_pin: The PIN of the Time Admin role.
+
+        Raise:
+            ValueError: If the PUK or PIN is too long.
+        """
+
+        if len(puk) > 6:
+            raise ValueError('The PUK is too long (maximum 6 character).')
+        elif len(admin_pin) > 5:
+            raise ValueError('The Admin PIN is to long (maximum 5 character)')
+        elif len(time_admin_pin) > 5:
+            raise ValueError(
+                'The Time Admin PIN is to long (maximum 5 character)'
+            )
+
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'SetUp',
+            'input': {
+                'puk': puk,
+                'adminPin': admin_pin,
+                'timeAdminPin': time_admin_pin
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        return result
 
     def run_self_test(self):
         data = {
