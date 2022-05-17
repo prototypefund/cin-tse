@@ -510,14 +510,6 @@ class TSE():
 
         You need to reboot the printer afterwards. In case of the TSE
         Server, please power cycle the TSE by removing and reinserting it.
-
-        Args:
-            puk: The PUK of the TSE device.
-            admin_pin: The Pin of the Admin role.
-            time_admin_pin: The PIN of the Time Admin role.
-
-        Raise:
-            ValueError: If the PUK or PIN is too long.
         """
         data = {
             'storage': {
