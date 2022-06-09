@@ -192,14 +192,8 @@ class _TSEHost:
             </open_device>
             '''.format(tse_id)
 
-        try:
-            root = ElementTree.fromstring(self._send(xml))
-            code = root.find('./code').text  # type: ignore
-
-        except Exception:
-            raise tse_ex.TSEError(
-                'An unexpected TSE error occurred.'
-            )
+        root = ElementTree.fromstring(self._send(xml))
+        code = root.find('./code').text  # type: ignore
 
         match code:
             case 'DEVICE_IN_USE':
@@ -235,8 +229,6 @@ class _TSEHost:
             tse.exceptions.TSEOpenError: If the TSE could not be opened.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
-            tse.exceptions.TSEDataError: If data sent by the TSE are
-                not correct.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
@@ -252,33 +244,34 @@ class _TSEHost:
                 </data>
             </device_data>"
             '''.format(tse_id, timeout*1000, json.dumps(data))
-        try:
-            root = ElementTree.fromstring(self._send(xml))
-            code = root.find('./data/code').text  # type: ignore
-            result = json.loads(
-                    root.find('./data/resultdata').text)  # type: ignore
 
-        except Exception:
-            raise tse_ex.TSEDataError(
-                'The data sent by the TSE are not correct'
-            )
+        root_element = ElementTree.fromstring(self._send(xml))
+        code_element = root_element.find('.//code')
+        result_element = root_element.find('./data/resultdata')
 
-        match code:
-            case 'ERROR_TIMEOUT':
-                raise tse_ex.TSETimeoutError(
-                    'A timeout error occurred while sending data to '
-                    'the TSE'
-                )
-            case 'ERROR_DEVICE_BUSY':
-                raise tse_ex.TSEInUseError(
-                    'The TSE is in use.'
-                )
-            case 'SUCCESS':
-                return result
-            case _:
-                raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+        if isinstance(code_element, ElementTree.Element):
+            code = code_element.text
+
+            match code:
+                case 'ERROR_TIMEOUT':
+                    raise tse_ex.TSETimeoutError(
+                        'A timeout error occurred while sending data to '
+                        'the TSE'
+                    )
+                case 'ERROR_DEVICE_BUSY':
+                    raise tse_ex.TSEInUseError(
+                        'The TSE is in use.'
+                    )
+                case 'DEVICE_NOT_OPEN':
+                    raise tse_ex.TSEOpenError(
+                        'The TSE device is not open.'
+                    )
+                case 'SUCCESS':
+                    return json.loads(result_element.text)
+                case _:
+                    raise tse_ex.TSEError(
+                        f'Unexpected TSE error occures: {code}.'
+                    )
 
     def tse_close(self, tse_id: str) -> None:
         """
@@ -290,29 +283,20 @@ class _TSEHost:
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE in not open.
-            tse.exceptions.TSEDataError: If data sent by the TSE are
-                not correct.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
-            tse.exceptions.NotConnectedError: If no connection to TSE host
-                is available.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
-            tse.exceptions.ConnectionClosedError: If the connection to the
-                host was closed.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
         """
         xml = '''
             <close_device>
                 <device_id>{}</device_id>
             </close_device>
             '''.format(tse_id)
-        try:
-            root = ElementTree.fromstring(self._send(xml))
-            code = root.find('./code').text  # type: ignore
 
-        except Exception:
-            raise tse_ex.TSEDataError(
-                'The data sent by the TSE are not correct'
-            )
+        root = ElementTree.fromstring(self._send(xml))
+        code = root.find('code').text  # type: ignore
 
         match code:
             case 'DEVICE_IN_USE':
@@ -371,6 +355,7 @@ class TSE():
         result = self._tse_host.tse_send(
             self._tse_id, data, timeout=self._timeout
         )
+
         tse_info = result['output']['tseInformation']
         state_data = tse_info['tseInitializationState']
         certificate_expiration_date = datetime.strptime(

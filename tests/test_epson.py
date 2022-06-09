@@ -142,14 +142,12 @@ class TestTSEHostTseOpen:
             tse_host = _TSEHost('')
             tse_host.tse_open('TSE_ID')
 
-    @pytest.mark.parametrize('error', ['SOME_ERROR', ''])
-    def test_tse_unexpected_error(
-            self, error, connect_response, open_response):
+    def test_tse_unexpected_error(self, connect_response, open_response):
         """A TSEOpenError is raised."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
-                open_response.format(error.encode())
+                open_response.format('SOME_ERROR').encode()
             ]
             tse_host = _TSEHost('')
 
@@ -226,21 +224,6 @@ class TestTSEHostTseSend:
             with pytest.raises(tse_ex.TSEInUseError):
                 tse_host.tse_send('TSE_ID', {})
 
-    def test_data_error(self, connect_response):
-        """A TSEDataError occurred."""
-        with patch('tse.epson.socket.socket') as socket_mock:
-            socket_mock.return_value.recv.side_effect = [
-                connect_response
-            ]
-
-            tse_host = _TSEHost('')
-            send_mock = Mock()
-            send_mock.return_value = ''
-            tse_host._send = send_mock
-
-            with pytest.raises(tse_ex.TSEDataError):
-                tse_host.tse_send('TSE_ID', {})
-
 
 class TestTSEHostTseClose:
     """Tests for the tse_close method."""
@@ -269,19 +252,6 @@ class TestTSEHostTseClose:
             tse_host = _TSEHost('')
 
             with pytest.raises(tse_ex.TSEOpenError):
-                tse_host.tse_close('TSE_ID')
-
-    def test_data_error(self, connect_response, open_response):
-        """A TSEDataError occurred."""
-        with patch('tse.epson.socket.socket') as socket_mock:
-            socket_mock.return_value.recv.side_effect = [
-                connect_response,
-                ''
-            ]
-
-            tse_host = _TSEHost('')
-
-            with pytest.raises(tse_ex.TSEDataError):
                 tse_host.tse_close('TSE_ID')
 
 

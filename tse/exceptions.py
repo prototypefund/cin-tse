@@ -21,21 +21,9 @@ class TSEInUseError(TSEError):
     """Raised if TSE is in use."""
 
 
-class TSEIsBusy(TSEError):
-    """Raised if TSE is busy."""
-
-
 class TSEOpenError(TSEError):
     """Raised if TSE cannot be opened."""
 
 
-class TSENotOpenError(TSEError):
-    """Raised if TSE is not open."""
-
-
 class TSETimeoutError(TSEError):
     """Raised if a TSE timeout occurs."""
-
-
-class TSEDataError(TSEError):
-    """Raised if TSEData are not correct."""
