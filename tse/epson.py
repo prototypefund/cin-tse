@@ -1,4 +1,8 @@
-"""The module for the Epson backend."""
+"""
+The module for the Epson backend.
+
+In this module the TSE protocol for Epson devices and helpers are implemented.
+"""
 import socket
 import json
 from datetime import datetime
@@ -16,13 +20,11 @@ class _TSEHost:
     that provides this interface can be addressed (e.g. the Epson TSE
     server or Epson TSE printer).
 
-    First, a socket connection to the host must be established. Then the
-    respective TSE can be opened and data can be sent to it. Then the TSE
-    must be closed and the socket can be closed. Normally the socket remains
-    open and only the TSE is opened and closed for writing.
-    If the TSE is used exclusively by only one client, then this can also
-    remain open. Opening and closing before and after writing is only
-    necessary if several clients share a TSE.
+    During the initialization of the instance, a socket connection to the
+    TSE host is established. To send data to the TSE, the respective TSE must
+    be opened and then closed again. If the TSE is used exclusively by only
+    one client, then this can also remain open. Opening and closing before
+    and after writing is only necessary if several clients share a TSE.
 
     .. code:: python
 
@@ -49,7 +51,8 @@ class _TSEHost:
         Raises:
             tse.exceptions.ConnectionError: If a unexpected error occurred.
             tse.exceptions.ConnectionTimeoutError: If socket timeout occurred.
-            tse.exceptions.HostnameError: If hostname format is not correct.
+            tse.exceptions.ConnectionHostnameError: If hostname format is not
+                correct.
         """
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -226,7 +229,7 @@ class _TSEHost:
 
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
-            tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
