@@ -5,16 +5,8 @@ class ConnectionError(Exception):
     """Base exception for all connection errors."""
 
 
-class HostnameError(ConnectionError):
-    """Base exception for all connection errors."""
-
-
-class NotConnectedError(ConnectionError):
-    """Raised if there is no connection to TSE host."""
-
-
-class ConnectionClosedError(ConnectionError):
-    """Raised if the connection to TSE host was closed."""
+class ConnectionHostnameError(ConnectionError):
+    """Raised if the Hostname is not correct."""
 
 
 class ConnectionTimeoutError(ConnectionError):
@@ -23,10 +15,6 @@ class ConnectionTimeoutError(ConnectionError):
 
 class TSEError(Exception):
     """Base exception for all TSE error."""
-
-
-class TSENotFoundError(TSEError):
-    """Raise if the TSE is not available."""
 
 
 class TSEInUseError(TSEError):

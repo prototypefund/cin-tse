@@ -28,17 +28,76 @@ class _TSEHost:
 
         tse_host = _TSEHost()
 
-        tse_host.connect(<host_ip>)
         tse_host.tse_open(<tse_id>)
         tse_host.tse_send(<tse_id>, <data_dict>)
         tse_host.tse_close(<tse_id>)
-        tse_host.disconnect()
     """
 
-    def __init__(self) -> None:
-        """Initialize the TSEHost instance."""
-        self._client_id: Optional[str] = None
-        self._protocol_version: Optional[str] = None
+    def __init__(
+            self, host: str, ssl: bool = False, timeout: int = 120) -> None:
+        """
+        Initialize the _TSEHost instance.
+
+        This method establishes a TCP socket connection to host and sets
+        the *client_id* and *protocol_version* properties.
+
+        Args:
+            host: The hostname or IP address of the host.
+            ssl: If true, a SSL encrypted connection is used.
+            timeout: The socket timeout in seconds.
+
+        Raises:
+            tse.exceptions.ConnectionError: If a unexpected error occurred.
+            tse.exceptions.ConnectionTimeoutError: If socket timeout occurred.
+            tse.exceptions.HostnameError: If hostname format is not correct.
+        """
+        try:
+            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._socket.settimeout(timeout)
+
+            if ssl:
+                self._socket.connect((host, 8143))
+            else:
+                self._socket.connect((host, 8009))
+
+            response = self._socket.recv(1024)
+
+            root = ElementTree.fromstring(response.decode().rstrip('\x00'))
+            client_id = root.find('*/client_id').text  # type: ignore
+            protocol_version = root.find(
+                    '*/protocol_version').text  # type: ignore
+            self._client_id = client_id
+            self._protocol_version = protocol_version
+
+        except socket.gaierror:
+            raise tse_ex.ConnectionHostnameError(
+                f'The connection to the host "{host}" could not '
+                'be established. The hostname has no valid format.'
+            )
+
+        except socket.timeout:
+            raise tse_ex.ConnectionTimeoutError(
+                f'The connection to the host "{host}" could not'
+                'be established. A timeout error occurs.'
+            )
+
+        except Exception as ex:
+            raise tse_ex.ConnectionError(
+                f'The connection to the host "{host}" could not '
+                f'be established ({str(ex)}).'
+            )
+
+    def __del__(self) -> None:
+        """
+        Cleanup the TSEHost instance.
+
+        This method closes the connection to the TSE host.
+        """
+        try:
+            self._socket.close()
+
+        except AttributeError:
+            pass
 
     @property
     def client_id(self) -> Optional[str]:
@@ -76,12 +135,10 @@ class _TSEHost:
             *\\x00* at the end.
 
         Raises:
-            tse.exceptions.NotConnectedError: If no connection to TSE host
-                is available.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
-            tse.exceptions.ConnectionClosedError: If the connection to the
-                host was closed.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
 
         """
         try:
@@ -98,81 +155,16 @@ class _TSEHost:
 
             return response.rstrip('\x00')
 
-        except AttributeError:
-            raise tse_ex.NotConnectedError(
-                'No connection to TSE host available. Please connect.'
-            )
-
         except socket.timeout:
             raise tse_ex.ConnectionTimeoutError(
                 'The data could not be sent to the TSE host. '
                 'Timeout error occurs.'
             )
 
-        except OSError:
-            raise tse_ex.ConnectionClosedError(
-                'The connection was closed. Please connect again.'
-            )
-
-    def connect(self, host: str, ssl: bool = False, timeout: int = 120) -> None:
-        """
-        Connect to the TSE host.
-
-        This method establishes a TCP socket connection to host and sets
-        the *client_id* and *protocol_version* properties.
-
-        Args:
-            host: The hostname or IP address of the host.
-            ssl: If true, a SSL encrypted connection is used.
-            timeout: The socket timeout in seconds.
-
-        Raises:
-            tse.exceptions.ConnectionError: If a unexpected error occurred.
-            tse.exceptions.ConnectionTimeoutError: If socket timeout occurred.
-            tse.exceptions.HostnameError: If hostname format is not correct.
-        """
-        try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.settimeout(timeout)
-
-            if ssl:
-                self._socket.connect((host, 8143))
-            else:
-                self._socket.connect((host, 8009))
-
-            response = self._socket.recv(1024)
-
-            try:
-                root = ElementTree.fromstring(response.decode().rstrip('\x00'))
-                client_id = root.find('*/client_id').text  # type: ignore
-                protocol_version = root.find(
-                        '*/protocol_version').text  # type: ignore
-
-            except Exception:
-                raise tse_ex.TSEDataError(
-                    'The data sent by the TSE are not correct'
-                )
-
-            if client_id and protocol_version:
-                self._client_id = client_id
-                self._protocol_version = protocol_version
-
-        except socket.gaierror:
-            raise tse_ex.HostnameError(
-                f'The connection to the host "{host}" could not'
-                'be established. The hostname has no valid format'
-            )
-
-        except socket.timeout:
-            raise tse_ex.ConnectionTimeoutError(
-                f'The connection to the host "{host}" could not'
-                'be established. A timeout error occurs.'
-            )
-
-        except Exception:
+        except (OSError, AttributeError):
             raise tse_ex.ConnectionError(
-                f'The connection to the host "{host}" could not'
-                'be established.'
+                'There is no established host connection. '
+                'Please connect again.'
             )
 
     def tse_open(self, tse_id: str) -> None:
@@ -183,19 +175,13 @@ class _TSEHost:
             tse_id: The ID of the TSE device.
 
         Raises:
-            tse.exceptions.TSENotFoundError: If TSE with passed ID was
-                not found.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE could not be opened.
-            tse.exceptions.TSEDataError: If data sent by the TSE are
-                not correct.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
-            tse.exceptions.NotConnectedError: If no connection to TSE host
-                is available.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
-            tse.exceptions.ConnectionClosedError: If the connection to the
-                host was closed.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
         """
         xml = '''
             <open_device>
@@ -211,20 +197,16 @@ class _TSEHost:
             code = root.find('./code').text  # type: ignore
 
         except Exception:
-            raise tse_ex.TSEDataError(
-                'The data sent by the TSE are not correct'
+            raise tse_ex.TSEError(
+                'An unexpected TSE error occurred.'
             )
 
         match code:
-            case 'DEVICE_NOT_FOUND':
-                raise tse_ex.TSENotFoundError(
-                    f'The TSE {tse_id} was not found.'
-                )
             case 'DEVICE_IN_USE':
                 raise tse_ex.TSEInUseError(
                     f'The TSE {tse_id} is in use.'
                 )
-            case 'DEVICE_OPEN_ERROR':
+            case 'DEVICE_OPEN_ERROR' | 'DEVICE_NOT_FOUND':
                 raise tse_ex.TSEOpenError(
                     'The TSE {tse_id} could not be opened.'
                 )
@@ -232,7 +214,7 @@ class _TSEHost:
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
+                    f'An unexpected TSE error occurred: {code}.'
                 )
 
     def tse_send(self, tse_id: str, data: dict, timeout: int = 3) -> dict:
@@ -249,19 +231,16 @@ class _TSEHost:
             timeout: TSE operation timeout in seconds.
 
         Raises:
-            tse.exceptions.TSENotFoundError: If TSE with passed ID was
-                not found.
-            tse.exceptions.TSEIsBusy: If the TSE is busy.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE could not be opened.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.TSEDataError: If data sent by the TSE are
                 not correct.
-            tse.exceptions.NotConnectedError: If no connection to TSE host
-                is available.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
-            tse.exceptions.ConnectionClosedError: If the connection to the
-                host was closed.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
         """
         xml = '''
             <device_data>
@@ -291,8 +270,8 @@ class _TSEHost:
                     'the TSE'
                 )
             case 'ERROR_DEVICE_BUSY':
-                raise tse_ex.TSEIsBusy(
-                    'The tse is busy.'
+                raise tse_ex.TSEInUseError(
+                    'The TSE is in use.'
                 )
             case 'SUCCESS':
                 return result
@@ -310,7 +289,7 @@ class _TSEHost:
 
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
-            tse.exceptions.TSENotOpenError: If the TSE in not open.
+            tse.exceptions.TSEOpenError: If the TSE in not open.
             tse.exceptions.TSEDataError: If data sent by the TSE are
                 not correct.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
@@ -341,7 +320,7 @@ class _TSEHost:
                     'The TSE {tse_id} is in use.'
                 )
             case 'DEVICE_NOT_OPEN':
-                raise tse_ex.TSENotOpenError(
+                raise tse_ex.TSEOpenError(
                     'The TSE {tse_id} is not open.'
                 )
             case 'OK':
@@ -350,27 +329,6 @@ class _TSEHost:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.'
                 )
-
-    def disconnect(self) -> None:
-        """
-        Disconnect the TSE host connection.
-
-        This method closes the connection to the TSE host and sets
-        the *client_id* and *protocol_version* properties to false.
-
-        Raises:
-            tse.exceptions.NotConnectedError: If no connection to the
-                host available.
-        """
-        try:
-            self._socket.close()
-            self._client_id = None
-            self._protocol_version = None
-
-        except AttributeError:
-            raise tse_ex.NotConnectedError(
-                'No connection to TSE host to close.'
-            )
 
 
 class TSE():
@@ -381,8 +339,7 @@ class TSE():
             ssl: bool = False, timeout: int = 3
             ) -> None:
         """Initialize the TSE instance."""
-        self._tse_host = _TSEHost()
-        self._tse_host.connect(host, ssl, timeout=120)
+        self._tse_host = _TSEHost(host, ssl, timeout=120)
         self._tse_id = tse_id
         self._timeout = timeout
 
@@ -557,7 +514,3 @@ class TSE():
             tse_id: The ID of the TSE device.
         """
         self._tse_host.tse_close(self._tse_id)
-
-    def __del__(self):
-        """Delete the instance."""
-        self._tse_host.disconnect()
