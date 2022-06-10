@@ -270,11 +270,15 @@ class _TSEHost:
                         'The TSE device is not open.'
                     )
                 case 'SUCCESS':
-                    return json.loads(result_element.text)
+                    if result_element and isinstance(result_element, str):
+                        return json.loads(result_element.text)
+
                 case _:
                     raise tse_ex.TSEError(
                         f'Unexpected TSE error occures: {code}.'
                     )
+
+        return {}
 
     def tse_close(self, tse_id: str) -> None:
         """
@@ -368,7 +372,7 @@ class TSE():
         self._tse_id = tse_id
         self._timeout = timeout
 
-    def open(self):
+    def open(self) -> None:
         """
         Open the TSE for operations.
 
@@ -384,7 +388,7 @@ class TSE():
         self._tse_host.tse_open(self._tse_id)
 
     @property
-    def info(self):
+    def info(self) -> TSEInfo:
         """
         Get a bnn.TSEInfo object.
 
@@ -546,7 +550,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def run_self_test(self):
+    def run_self_test(self) -> None:
         """
         Run self test for TSE device.
 
@@ -638,7 +642,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the TSE device.
         """
