@@ -27,3 +27,15 @@ class TSEOpenError(TSEError):
 
 class TSETimeoutError(TSEError):
     """Raised if a TSE timeout occurs."""
+
+
+class TSEAlreadyInitializedError(TSEError):
+    """Raised if a TSE are already initialized."""
+
+
+class TSESelfTestError(TSEError):
+    """Raised ff an error occurs during the self test.."""
+
+
+class TSENeedsSelfTestError(TSEError):
+    """Raised if a TSE needs a self test."""
