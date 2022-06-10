@@ -382,8 +382,8 @@ class TestTSEInfo:
         assert tse_info.needs_self_test
         assert tse_info.api_version == '65792'
 
-    def test_tmp(self, connect_response, json_response):
-        """A correct TSEInfo instatnce returned."""
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response
@@ -400,6 +400,63 @@ class TestTSEInfo:
                     tse.info
 
 
+class TestGetChallenge:
+    """Tests for the _get_challenge method of the TSE class."""
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response
+            ]
+
+            json_response['result'] = 'SOME_ERROR'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '10.0.0.2')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse._get_challenge()
+
+    def test_execution_ok(self, connect_response, json_response):
+        """The Execution was OK."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response
+            ]
+
+            json_response['result'] = 'EXECUTION_OK'
+            json_response['output'] = {'challenge': 'JSUJEEKSK6789'}
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '10.0.0.2')
+
+                assert tse._get_challenge() == 'JSUJEEKSK6789'
+
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         print(tse._get_challenge())
+    #         # print(tse.info)
+    #     except Exception as e:
+    #         print(e)
+    #     tse.close()
+
+    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         print(tse.factory_reset())
+    #     except Exception as e:
+    #         print(e)
+    #
+    #     tse.close()
 class TestTSEInitialize:
     """Tests for the initialize method of TSE class."""
 
@@ -599,30 +656,3 @@ class TestTSEFactoryReset:
 
                 with pytest.raises(tse_ex.TSEError):
                     tse.factory_reset()
-
-    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #     try:
-    #         print(tse.info)
-    #         # tse.run_self_test()
-    #         # print(tse.info.state)
-    #         # print(tse.initialize('123456', '12345', '54321'))
-    #         # print(tse.info.state)
-    #     except Exception as e:
-    #         print(e)
-    # #     # print(tse._factory_reset())
-    # #     # print(tse.setup('111111', '222222', '333333'))
-    # #     # print(tse.run_self_test())
-    #     tse.close()
-    #
-    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #
-    #     try:
-    #         print(tse.factory_reset())
-    #     except Exception as e:
-    #         print(e)
-    #
-    #     tse.close()

@@ -12,6 +12,7 @@ from tse import exceptions as tse_ex
 from tse import TSEInfo, TSEState
 
 
+
 class _TSEHost:
     """
     This class offers the possibility to communicate with an Epson TSE host.
@@ -407,8 +408,6 @@ class TSE():
             self._tse_id, data, timeout=self._timeout
         )
 
-        print(result)
-
         code = result['result']
 
         match code:
@@ -459,6 +458,21 @@ class TSE():
         return info
 
     def _get_challenge(self) -> str:
+        """
+        Get challenge data.
+
+        The data is used to calculate the hash value required
+        for user authentication.
+
+        Raises:
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
         data = {
             'storage': {
                 'type': 'TSE',
@@ -477,10 +491,17 @@ class TSE():
         result = self._tse_host.tse_send(
             self._tse_id, data, timeout=120)
 
-        print(result)
+        code = result['result']
 
-        # code = result['result']
+        match code:
+            case 'EXECUTION_OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.'
+                )
 
+        return result['output']['challenge']
 
     def open(self) -> None:
         """
