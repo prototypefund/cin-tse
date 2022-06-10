@@ -270,7 +270,8 @@ class _TSEHost:
                         'The TSE device is not open.'
                     )
                 case 'SUCCESS':
-                    if result_element and isinstance(result_element, str):
+                    if isinstance(result_element, ElementTree.Element) \
+                            and isinstance(result_element.text, str):
                         return json.loads(result_element.text)
 
                 case _:
@@ -372,27 +373,12 @@ class TSE():
         self._tse_id = tse_id
         self._timeout = timeout
 
-    def open(self) -> None:
-        """
-        Open the TSE for operations.
-
-        Raises:
-            tse.exceptions.TSEInUseError: If the TSE is in use.
-            tse.exceptions.TSEOpenError: If the TSE could not be opened.
-            tse.exceptions.TSEError: If an unexpected TSE error occurred.
-            tse.exceptions.ConnectionTimeoutError: If a socket timeout
-                occurred.
-            tse.exceptions.ConnectionError: If there is no connection to
-                the host.
-        """
-        self._tse_host.tse_open(self._tse_id)
-
     @property
     def info(self) -> TSEInfo:
         """
         Get a bnn.TSEInfo object.
 
-        Role: None
+        **Role: None**
 
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
@@ -420,6 +406,8 @@ class TSE():
         result = self._tse_host.tse_send(
             self._tse_id, data, timeout=self._timeout
         )
+
+        print(result)
 
         code = result['result']
 
@@ -470,6 +458,49 @@ class TSE():
 
         return info
 
+    def _get_challenge(self) -> str:
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'GetChallenge',
+            'input': {
+                'userId': 'Administrator'
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        print(result)
+
+        # code = result['result']
+
+
+    def open(self) -> None:
+        """
+        Open the TSE for operations.
+
+        Raises:
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        self._tse_host.tse_open(self._tse_id)
+
+    def close(self) -> None:
+        """Close the TSE device."""
+        self._tse_host.tse_close(self._tse_id)
+
     def initialize(
             self, puk: str,
             admin_pin: str,
@@ -481,7 +512,7 @@ class TSE():
         The maximum length of the PUK is 6 characters and the maximum length
         for PINs is 5 characters.
 
-        Role: None
+        **Role: None**
 
         Args:
             puk: The PUK of the TSE device.
@@ -553,7 +584,7 @@ class TSE():
         """
         Run self test for TSE device.
 
-        Role: None
+        **Role: None**
 
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
@@ -603,7 +634,7 @@ class TSE():
         You need to reboot the printer afterwards. In case of the TSE
         Server, please power cycle the TSE by removing and reinserting it.
 
-        Role: None
+        **Role: None**
 
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
@@ -641,6 +672,3 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def close(self) -> None:
-        """Close the TSE device."""
-        self._tse_host.tse_close(self._tse_id)
