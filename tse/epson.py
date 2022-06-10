@@ -11,10 +11,10 @@ from datetime import datetime
 from xml.etree import ElementTree
 from typing import Optional
 from tse import exceptions as tse_ex
-from tse import TSEInfo, TSEState
+from tse import TSEInfo, TSEState, TSERole
 
 
-def _hash(challenge: str, secret: str) -> str:
+def _hash(challenge: str, secret: str) -> bytes:
     """
     Hash the challenge and secret composition.
 
@@ -23,7 +23,7 @@ def _hash(challenge: str, secret: str) -> str:
 
     Args:
         challenge: The challenge returned by the TSE.
-        secrets: The shared secret.
+        secret: The shared secret.
     """
     composition = challenge+secret
 
@@ -365,6 +365,7 @@ class TSE():
             self,
             tse_id: str,
             host: str,
+            secret: str = 'EPSONKEY',
             ssl: bool = False,
             timeout: int = 3
             ) -> None:
@@ -377,6 +378,7 @@ class TSE():
         Args:
             tse_id: The ID of the TSE device.
             host: The hostname or IP address of the host.
+            secret: The shared secret for authentication.
             ssl: If true, a SSL encrypted connection is used.
             timeout: Timeout for TSE operations in seconds.
 
@@ -390,6 +392,7 @@ class TSE():
         self._tse_host = _TSEHost(host, ssl, timeout=120)
         self._tse_id = tse_id
         self._timeout = timeout
+        self._secret = secret
 
     @property
     def info(self) -> TSEInfo:
@@ -618,6 +621,118 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
+    def user_login(
+            self,
+            user_id: str,
+            role: TSERole,
+            pin: str,
+            ) -> None:
+        """
+        Login a user with specific role.
+
+        Roles are used to restrict the calling of certain properties and
+        methods. There are two possible roles Admin and the TimeAdmin.
+        The role needed to call a method is described in the documentation
+        of the method.
+
+        **Role: None**
+
+        Args:
+            user_id: The user ID. For Admin role only the "Administrator" user
+                is allowed. For TimeAdmin all client IDs are allowed.
+            role: A TSERole.
+            pin: The PIN for the role.
+
+        Raises:
+            tse.exceptions.TSELoginError: If a login error occurs.
+            tse.exceptions.TSEPinBlockedError: If the PIN was blocked.
+            tse.exceptions.TSEHashError: If the hash for authentication
+                was wrong.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+
+        challenge = self._get_challenge()
+
+        hash = _hash(challenge, self._secret)
+
+        if role == TSERole.ADMIN:
+            login_function = 'AuthenticateUserForAdmin'
+
+            data = {
+                'storage': {
+                    'type': 'TSE',
+                    'vendor': 'TSE1'
+                },
+                'function': login_function,
+                'input': {
+                    'userId': user_id,
+                    'pin': pin,
+                    'hash': hash.decode()
+                },
+                'compress': {
+                    'required': False,
+                    'type': ''
+                }
+            }
+        else:
+            login_function = 'AuthenticateUserForTimeAdmin'
+
+            data = {
+                'storage': {
+                    'type': 'TSE',
+                    'vendor': 'TSE1'
+                },
+                'function': login_function,
+                'input': {
+                    'clientId': user_id,
+                    'pin': pin,
+                    'hash': hash.decode()
+                },
+                'compress': {
+                    'required': False,
+                    'type': ''
+                }
+            }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'OTHER_ERROR_INVALID_ADMIN_USER_ID':
+                raise tse_ex.TSELoginError(
+                    'The only the "Administrator" user can login '
+                    'with "Admin" role.'
+                )
+            case 'TSE1_ERROR_AUTHENTICATION_FAILED':
+                remaining_retries = result['output']['remainingRetries']
+
+                raise tse_ex.TSELoginError(
+                        f'The user {user_id} could not login as {role} role '
+                        f'(remaining retries: {remaining_retries}).'
+                )
+            case 'TSE1_ERROR_AUTHENTICATION_PIN_BLOCKED':
+                raise tse_ex.TSEPinBlockedError(
+                    f'The PIN for {role} was blocked.'
+                )
+            case 'OTHER_ERROR_HOST_AUTHENTICATION_FAILED':
+                raise tse_ex.TSEHashError('Wrong authentication hash.')
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.'
+                )
+
     def run_self_test(self) -> None:
         """
         Run self test for TSE device.
@@ -645,9 +760,6 @@ class TSE():
                 'type': ''
             }
         }
-
-        result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
 
         result = self._tse_host.tse_send(
             self._tse_id, data, timeout=120)

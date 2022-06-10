@@ -3,7 +3,7 @@ import pytest
 import socket
 from datetime import datetime, timezone
 from unittest.mock import patch
-from tse import exceptions as tse_ex, TSEState
+from tse import exceptions as tse_ex, TSEState, TSERole
 from tse.epson import _TSEHost, TSE, _hash
 
 
@@ -446,27 +446,7 @@ class TestGetChallenge:
 
                 assert tse._get_challenge() == 'JSUJEEKSK6789'
 
-    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #
-    #     try:
-    #         print(tse._get_challenge())
-    #         # print(tse.info)
-    #     except Exception as e:
-    #         print(e)
-    #     tse.close()
 
-    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #
-    #     try:
-    #         print(tse.factory_reset())
-    #     except Exception as e:
-    #         print(e)
-    #
-    #     tse.close()
 class TestTSEInitialize:
     """Tests for the initialize method of TSE class."""
 
@@ -564,8 +544,7 @@ class TestTSEInitialize:
                 connect_response,
             ]
 
-            json_response['result'] = \
-                'EXECUTION_OK'
+            json_response['result'] = 'EXECUTION_OK'
 
             with patch(
                     'tse.epson._TSEHost.tse_send', return_value=json_response):
@@ -575,6 +554,164 @@ class TestTSEInitialize:
                 assert not tse.initialize('123456', '12345', '54321')
 
 
+class TestAuthenticateUser:
+    """Tests for the authenticate_user method of TSE class."""
+
+    def test_wrong_admin_user(self, connect_response, json_response):
+        """Wrong user for Admin role (only Administrator allowed)."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response,
+            ]
+
+            json_response['result'] = 'OTHER_ERROR_INVALID_ADMIN_USER_ID'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSELoginError):
+                        tse.user_login(
+                            'xyz', TSERole.ADMIN, '12345')
+
+    def test_login_error(self, connect_response, json_response):
+        """A login error occurred."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response,
+            ]
+
+            json_response['result'] = 'TSE1_ERROR_AUTHENTICATION_FAILED'
+            json_response['output'] = {'remainingRetries': 2}
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSELoginError):
+                        tse.user_login(
+                            'xyz', TSERole.TIME_ADMIN, '12345')
+
+    def test_correct_admin_user(self, connect_response, json_response):
+        """The Administrator user logged in."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response,
+            ]
+
+            json_response['result'] = 'EXECUTION_OK'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    assert not tse.user_login(
+                            'xyz', TSERole.ADMIN, '12345')
+
+    def test_pin_blocked(self, connect_response, json_response):
+        """The PIN was blocked."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response,
+            ]
+
+            json_response['result'] = 'TSE1_ERROR_AUTHENTICATION_PIN_BLOCKED'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEPinBlockedError):
+                        tse.user_login(
+                                'xyz', TSERole.ADMIN, '12345')
+
+    def test_hash_error(self, connect_response, json_response):
+        """The PIN was blocked."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response,
+            ]
+
+            json_response['result'] = 'OTHER_ERROR_HOST_AUTHENTICATION_FAILED'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEHashError):
+                        tse.user_login(
+                                'xyz', TSERole.ADMIN, '12345')
+
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson.socket.socket') as socket_mock:
+            socket_mock.return_value.recv.side_effect = [
+                connect_response,
+            ]
+
+            json_response['result'] = 'XYZ'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEError):
+                        tse.user_login(
+                                'xyz', TSERole.ADMIN, '12345')
+
+
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         # tse.run_self_test()
+    #         # tse.initialize('123456', '12345', '54321')
+    #         tse.authenticate_user('Administrator', TSERole.ADMIN, '12345', 'EPSONKEY')
+    #         # print(tse.info)
+    #     except Exception as e:
+    #         print(e)
+    #     tse.close()
+    #
+    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         tse.factory_reset()
+    #     except Exception as e:
+    #         print(e)
+    #
+    #     tse.close()
+    #
 class TestTSERunSelfTest:
     """Tests for the run_self_test method of TSE class."""
 

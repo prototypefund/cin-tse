@@ -39,3 +39,15 @@ class TSESelfTestError(TSEError):
 
 class TSENeedsSelfTestError(TSEError):
     """Raised if a TSE needs a self test."""
+
+
+class TSELoginError(TSEError):
+    """Raised if a TSE user does not exist."""
+
+
+class TSEPinBlockedError(TSEError):
+    """Raised if a TSE login PIN was blocked."""
+
+
+class TSEHashError(TSEError):
+    """Raised if the authentication error orrurs."""
