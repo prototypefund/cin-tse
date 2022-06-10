@@ -2,13 +2,14 @@
 import pytest
 import socket
 from datetime import datetime, timezone
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from tse import exceptions as tse_ex, TSEState
 from tse.epson import _TSEHost, TSE
 
 
 @pytest.fixture
 def connect_response():
+    """Test response for the connection."""
     response = '''
         <connect>
             <data>
@@ -82,6 +83,7 @@ class TestTSEHostSend:
 
 @pytest.fixture
 def open_response():
+    """Test response for opening the TSE."""
     response = '''
         <open_device>
             <device_id>TSE_ID</device_id>
@@ -157,6 +159,7 @@ class TestTSEHostTseOpen:
 
 @pytest.fixture
 def send_response():
+    """Test response for sending to the TSE."""
     response = '''
         <device_data>
             <sequence>0</sequence>
@@ -224,6 +227,7 @@ class TestTSEHostTseSend:
 
 @pytest.fixture
 def close_response():
+    """Test response for closing the TSE."""
     response = '''
         <close_device>
             <device_id>TSE_ID</device_id>
@@ -267,6 +271,7 @@ class TestTSEHostTseClose:
 
 @pytest.fixture
 def json_response():
+    """Test response for the JSON API call."""
     response = {
         'error': {
             'errorinfo': '',
@@ -399,6 +404,7 @@ class TestTSEInitialize:
     """Tests for the initialize method of TSE class."""
 
     def test_puk_too_long(self, connect_response):
+        """The PUK is too long."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response
@@ -409,6 +415,7 @@ class TestTSEInitialize:
                 tse.initialize('1234567', '12345', '54321')
 
     def test_admin_pin_too_long(self, connect_response):
+        """The Admin PIN is too long."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response
@@ -419,6 +426,7 @@ class TestTSEInitialize:
                 tse.initialize('123456', '123456', '54321')
 
     def test_time_admin_pin_too_long(self, connect_response):
+        """The TimeAdmin PIN is too long."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response

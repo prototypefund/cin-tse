@@ -13,7 +13,8 @@ def pytest_addoption(parser):
     parser.addoption(
         '--epson_tse_id',
         action='store',
-        default='TSE_FDDA56DAA09F7FAC125E58F45945D1E4AC9ED9133F75C310953B632B42BBBA56',
+        default='TSE_FDDA56DAA09F7FAC125E58F45945D1E' +
+        '4AC9ED9133F75C310953B632B42BBBA56',
         help='The IP address of the Epson TSE.'
     )
 

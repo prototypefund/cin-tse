@@ -502,7 +502,6 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-
         if len(puk) > 6:
             raise ValueError('The PUK is too long (maximum 6 character).')
         elif len(admin_pin) > 5:
@@ -643,7 +642,5 @@ class TSE():
                 )
 
     def close(self) -> None:
-        """
-        Close the TSE device.
-        """
+        """Close the TSE device."""
         self._tse_host.tse_close(self._tse_id)
