@@ -13,6 +13,12 @@ class TSEState(Enum):
     DECOMMISSIONED = auto()
 
 
+class TSERole(Enum):
+    """The available TSE roles."""
+    ADMIN = auto()
+    TIME_ADMIN = auto()
+
+
 @dataclass(frozen=True)
 class TSEInfo:
     """The class to access TSE infomation."""
