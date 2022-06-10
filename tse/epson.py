@@ -5,12 +5,29 @@ In this module the TSE protocol for Epson devices and helpers are implemented.
 """
 import socket
 import json
+from hashlib import sha256
+from base64 import b64encode
 from datetime import datetime
 from xml.etree import ElementTree
 from typing import Optional
 from tse import exceptions as tse_ex
 from tse import TSEInfo, TSEState
 
+
+def _hash(challenge: str, secret: str) -> str:
+    """
+    Hash the challenge and secret composition.
+
+    This function hashes the given data using the following formula:
+    encodeBase64(sha256(challenge + secret))
+
+    Args:
+        challenge: The challenge returned by the TSE.
+        secrets: The shared secret.
+    """
+    composition = challenge+secret
+
+    return b64encode(sha256(composition.encode()).digest())
 
 
 class _TSEHost:

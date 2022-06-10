@@ -4,7 +4,17 @@ import socket
 from datetime import datetime, timezone
 from unittest.mock import patch
 from tse import exceptions as tse_ex, TSEState
-from tse.epson import _TSEHost, TSE
+from tse.epson import _TSEHost, TSE, _hash
+
+
+class TestHash:
+    """Tests for the _hash function."""
+
+    def test_hash_correct(self):
+        """Is the hash correct."""
+        result = _hash('jdsdsdsdjdsdj', 'EPSONKEY')
+
+        assert result == b'wWM1Xcd0qrctlQwpvBMg3x0t9h/tgAg2qhTlxTX8V4A='
 
 
 @pytest.fixture
