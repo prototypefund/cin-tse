@@ -386,7 +386,7 @@ class TSE():
     @property
     def info(self):
         """
-        Get a TSEInfo object.
+        Get a bnn.TSEInfo object.
 
         Role: None
 

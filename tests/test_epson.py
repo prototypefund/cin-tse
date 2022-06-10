@@ -182,15 +182,14 @@ class TestTSEHostTseSend:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse_host = _TSEHost('')
-            send_mock = Mock()
-            send_mock.return_value = send_response.format(
-                'SUCCESS', '{"test": 123}'
-            )
-            tse_host._send = send_mock
-            result = tse_host.tse_send('TSE_ID', {})
 
-            assert result == {'test': 123}
+            response = send_response.format('SUCCESS', '{"test": 123}')
+
+            with patch('tse.epson._TSEHost._send', return_value=response):
+                tse_host = _TSEHost('')
+                result = tse_host.tse_send('TSE_ID', {})
+
+                assert result == {'test': 123}
 
     def test_timeout_error(self, connect_response, send_response):
         """A timout error occurred."""
@@ -198,15 +197,14 @@ class TestTSEHostTseSend:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse_host = _TSEHost('')
-            send_mock = Mock()
-            send_mock.return_value = send_response.format(
-                'ERROR_TIMEOUT', '{}'
-            )
-            tse_host._send = send_mock
 
-            with pytest.raises(tse_ex.TSETimeoutError):
-                tse_host.tse_send('TSE_ID', {})
+            response = send_response.format('ERROR_TIMEOUT', '{}')
+
+            with patch('tse.epson._TSEHost._send', return_value=response):
+                tse_host = _TSEHost('')
+
+                with pytest.raises(tse_ex.TSETimeoutError):
+                    tse_host.tse_send('TSE_ID', {})
 
     def test_tse_is_busy(self, connect_response, send_response):
         """A TSEIsBusyError occurred."""
@@ -214,26 +212,38 @@ class TestTSEHostTseSend:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse_host = _TSEHost('')
-            send_mock = Mock()
-            send_mock.return_value = send_response.format(
-                'ERROR_DEVICE_BUSY', '{}'
-            )
-            tse_host._send = send_mock
 
-            with pytest.raises(tse_ex.TSEInUseError):
-                tse_host.tse_send('TSE_ID', {})
+            response = send_response.format('ERROR_DEVICE_BUSY', '{}')
+
+            with patch('tse.epson._TSEHost._send', return_value=response):
+                tse_host = _TSEHost('')
+
+                with pytest.raises(tse_ex.TSEInUseError):
+                    tse_host.tse_send('TSE_ID', {})
+
+
+@pytest.fixture
+def close_response():
+    response = '''
+        <close_device>
+            <device_id>TSE_ID</device_id>
+            <code>{}</code>
+            <data_id>1</data_id>
+        </close_device>\x00
+    '''.replace('\n', '').replace(' ', '')
+
+    return response
 
 
 class TestTSEHostTseClose:
     """Tests for the tse_close method."""
 
-    def test_tse_in_use_error(self, connect_response, open_response):
+    def test_tse_in_use_error(self, connect_response, close_response):
         """A TSEInUseError is raised."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
-                open_response.format('DEVICE_IN_USE').encode()
+                close_response.format('DEVICE_IN_USE').encode()
             ]
 
             tse_host = _TSEHost('')
@@ -241,12 +251,12 @@ class TestTSEHostTseClose:
             with pytest.raises(tse_ex.TSEInUseError):
                 tse_host.tse_close('TSE_ID')
 
-    def test_tse_not_open_error(self, connect_response, open_response):
+    def test_tse_not_open_error(self, connect_response, close_response):
         """A TSEOpenError is raised."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
-                open_response.format('DEVICE_NOT_OPEN').encode()
+                close_response.format('DEVICE_NOT_OPEN').encode()
             ]
 
             tse_host = _TSEHost('')
@@ -256,7 +266,7 @@ class TestTSEHostTseClose:
 
 
 @pytest.fixture
-def json_error_response():
+def json_response():
     response = {
         'error': {
             'errorinfo': '',
@@ -367,19 +377,17 @@ class TestTSEInfo:
         assert tse_info.needs_self_test
         assert tse_info.api_version == '65792'
 
-    def test_tmp(self, connect_response, json_error_response):
+    def test_tmp(self, connect_response, json_response):
         """A correct TSEInfo instatnce returned."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response
             ]
 
-            json_error_response['result'] = 'SOME_ERROR'
+            json_response['result'] = 'SOME_ERROR'
 
             with patch(
-                    'tse.epson._TSEHost.tse_send',
-                    return_value=json_error_response
-                    ):
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
 
                 tse = TSE('TSE_ID', '10.0.0.2')
 
@@ -421,136 +429,168 @@ class TestTSEInitialize:
                 tse.initialize('123456', '12345', '654321')
 
     def test_tse_already_initialized(
-            self, connect_response, json_error_response):
+            self, connect_response, json_response):
         """A TSEAlreadyInitializedError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'OTHER_ERROR_TSE_ALREADY_SET_UP'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            with pytest.raises(tse_ex.TSEAlreadyInitializedError):
-                tse.initialize('123456', '12345', '54321')
+            json_response['result'] = 'OTHER_ERROR_TSE_ALREADY_SET_UP'
 
-    def test_tse_needs_self_test(self, connect_response, json_error_response):
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '10.0.0.2')
+
+                with pytest.raises(tse_ex.TSEAlreadyInitializedError):
+                    tse.initialize('123456', '12345', '54321')
+
+    def test_tse_needs_self_test(self, connect_response, json_response):
         """A TSEAlreadyInitializedError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = \
+
+            json_response['result'] = \
                 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            with pytest.raises(tse_ex.TSENeedsSelfTestError):
-                tse.initialize('123456', '12345', '54321')
+            with patch(
+                    'tse.epson._TSEHost.tse_send',
+                    return_value=json_response
+                    ):
+                tse = TSE('TSE_ID', '')
 
-    def test_unexpected_error(self, connect_response, json_error_response):
+                with pytest.raises(tse_ex.TSENeedsSelfTestError):
+                    tse.initialize('123456', '12345', '54321')
+
+    def test_unexpected_error(self, connect_response, json_response):
         """A TSEError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'XYZ'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            with pytest.raises(tse_ex.TSEError):
-                tse.initialize('123456', '12345', '54321')
+            json_response['result'] = 'XYZ'
 
-    def test_execution_ok(self, connect_response, json_error_response):
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.initialize('123456', '12345', '54321')
+
+    def test_execution_ok(self, connect_response, json_response):
         """The Execution was OK."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'EXECUTION_OK'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            assert not tse.initialize('123456', '12345', '54321')
+            json_response['result'] = \
+                'EXECUTION_OK'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.initialize('123456', '12345', '54321')
 
 
 class TestTSERunSelfTest:
     """Tests for the run_self_test method of TSE class."""
 
-    def test_execution_ok(self, connect_response, json_error_response):
+    def test_execution_ok(self, connect_response, json_response):
         """The Execution was OK."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'EXECUTION_OK'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            assert not tse.run_self_test()
+            json_response['result'] = \
+                'EXECUTION_OK'
 
-    def test_cient_not_registered(self, connect_response, json_error_response):
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.run_self_test()
+
+    def test_client_not_registered(self, connect_response, json_response):
         """The Execution was OK if client not registered."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'TSE1_ERROR_CLIENT_NOT_REGISTERED'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            assert not tse.run_self_test()
+            json_response['result'] = \
+                'TSE1_ERROR_CLIENT_NOT_REGISTERED'
 
-    def test_self_test_error(self, connect_response, json_error_response):
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.run_self_test()
+
+    def test_self_test_error(self, connect_response, json_response):
         """A TSESelfTestError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'XYZ'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            with pytest.raises(tse_ex.TSESelfTestError):
-                tse.run_self_test()
+            json_response['result'] = \
+                'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSESelfTestError):
+                    tse.run_self_test()
 
 
 class TestTSEFactoryReset:
     """Tests for the factory_reset method of TSE class."""
 
-    def test_execution_ok(self, connect_response, json_error_response):
+    def test_execution_ok(self, connect_response, json_response):
         """The Execution was OK."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'EXECUTION_OK'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            assert not tse.factory_reset()
+            json_response['result'] = 'EXECUTION_OK'
 
-    def test_unexpected_error(self, connect_response, json_error_response):
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.factory_reset()
+
+    def test_unexpected_error(self, connect_response, json_response):
         """A TSEError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
             ]
-            tse = TSE('TSE_ID', '')
-            json_error_response['result'] = 'XYZ'
-            send_mock = Mock(return_value=json_error_response)
-            tse._tse_host.tse_send = send_mock
 
-            with pytest.raises(tse_ex.TSEError):
-                tse.factory_reset()
+            json_response['result'] = 'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.factory_reset()
 
     # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
     #     tse = TSE(epson_tse_id, epson_tse_host_ip)
