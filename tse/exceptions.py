@@ -42,7 +42,11 @@ class TSENeedsSelfTestError(TSEError):
 
 
 class TSELoginError(TSEError):
-    """Raised if a TSE user does not exist."""
+    """Raised if a TSE user could not be logged in."""
+
+
+class TSELogoutError(TSEError):
+    """Raised if a TSE user could not be logged out"""
 
 
 class TSEPinBlockedError(TSEError):
