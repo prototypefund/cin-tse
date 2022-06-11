@@ -556,7 +556,7 @@ class TestTSEInitialize:
 
 
 class TestLoginUser:
-    """Tests for the authenticate_user method of TSE class."""
+    """Tests for the login_user method of TSE class."""
 
     def test_wrong_admin_user(self, connect_response, json_response):
         """Wrong user for Admin role (only Administrator allowed)."""
@@ -690,7 +690,7 @@ class TestLoginUser:
 
 
 class TestLogoutUser:
-    """Tests for the authenticate_user method of TSE class."""
+    """Tests for the logout_user method of TSE class."""
 
     def test_logout_successful(self, json_response):
         """The logout was successful."""
@@ -754,7 +754,7 @@ class TestLogoutUser:
 
 
 class TestRegisterClient:
-    """Tests for the authenticate_user method of TSE class."""
+    """Tests for the register_client method of TSE class."""
 
     def test_client_registered(self, json_response):
         """The client was registered."""
