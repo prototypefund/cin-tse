@@ -835,6 +835,68 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
+    def register_client(self, client_id: str) -> None:
+        """
+        Logout a user with specific role.
+
+        **Role: TSERole.ADMIN**
+
+        Args:
+            user_id: The user ID. For Admin role only the "Administrator" user
+                is allowed. For TimeAdmin all client IDs are allowed.
+            role: A TSERole.
+
+        Raises:
+            ValueError: If maximum length of client ID is greater than
+                30 characters.
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'RegisterClient',
+            'input': {
+                'clientId': client_id,
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.ADMIN role.'
+                )
+            case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
+                raise ValueError(
+                    'Maximum length of client ID is 30 characters.'
+                )
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.'
+                )
+
     def run_self_test(self) -> None:
         """
         Run self test for TSE device.
