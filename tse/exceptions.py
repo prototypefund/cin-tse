@@ -46,7 +46,7 @@ class TSELoginError(TSEError):
 
 
 class TSELogoutError(TSEError):
-    """Raised if a TSE user could not be logged out"""
+    """Raised if a TSE user could not be logged out."""
 
 
 class TSEPinBlockedError(TSEError):

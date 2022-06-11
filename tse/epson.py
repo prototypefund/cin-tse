@@ -663,7 +663,7 @@ class TSE():
         Raises:
             tse.exceptions.TSELoginError: If a login error occurs.
             tse.exceptions.TSEPinBlockedError: If the PIN was blocked.
-            tse.exceptions.TSEHashError: If the hash for authentication
+            tse.exceptions.TSESecretError: If the secret for authentication
                 was wrong.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
@@ -726,8 +726,8 @@ class TSE():
         match code:
             case 'OTHER_ERROR_INVALID_ADMIN_USER_ID':
                 raise tse_ex.TSELoginError(
-                    'The only the "Administrator" user can login '
-                    'with "Admin" role.'
+                    'Only the "Administrator" user can be logged in '
+                    'with TSERole.ADMIN role.'
                 )
             case 'TSE1_ERROR_AUTHENTICATION_FAILED':
                 remaining_retries = result['output']['remainingRetries']
@@ -742,6 +742,92 @@ class TSE():
                 )
             case 'OTHER_ERROR_HOST_AUTHENTICATION_FAILED':
                 raise tse_ex.TSESecretError('Wrong authentication secret.')
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.'
+                )
+
+    def logout_user(
+            self,
+            user_id: str,
+            role: TSERole,
+            ) -> None:
+        """
+        Logout a user with specific role.
+
+        **Role: None**
+
+        Args:
+            user_id: The user ID. For Admin role only the "Administrator" user
+                is allowed. For TimeAdmin all client IDs are allowed.
+            role: A TSERole.
+
+        Raises:
+            tse.exceptions.TSELogoutError: If a logout error occurs.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        if role == TSERole.ADMIN:
+            if user_id != 'Administrator':
+                raise tse_ex.TSELogoutError(
+                    'Only the "Administrator" user can be logged in '
+                    'with TSERole.ADMIN role.'
+                )
+
+            data = {
+                'storage': {
+                    'type': 'TSE',
+                    'vendor': 'TSE1'
+                },
+                'function': 'LogOutForAdmin',
+                'input': {
+                },
+                'compress': {
+                    'required': False,
+                    'type': ''
+                }
+            }
+        else:
+            data = {
+                'storage': {
+                    'type': 'TSE',
+                    'vendor': 'TSE1'
+                },
+                'function': 'LogOutForTimeAdmin',
+                'input': {
+                    'clientId': user_id,
+                },
+                'compress': {
+                    'required': False,
+                    'type': ''
+                }
+            }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSELogoutError(
+                    'Only the "Administrator" user can be logged in '
+                    'with TSERole.ADMIN role.'
+                )
+            case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
+                raise tse_ex.TSELogoutError(
+                    f'The user {user_id} not logged in with '
+                    'TSERole.TIME_ADMIN role.'
+                )
             case 'EXECUTION_OK':
                 return None
             case _:

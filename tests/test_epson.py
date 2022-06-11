@@ -689,6 +689,84 @@ class TestLoginUser:
                                 'xyz', TSERole.ADMIN, '12345')
 
 
+class TestLogoutUser:
+    """Tests for the authenticate_user method of TSE class."""
+
+    def test_logout_successful(self, json_response):
+        """The logout was successful."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.logout_user('Administrator', TSERole.ADMIN)
+
+    def test_no_admin_user_logged_in(self, json_response):
+        """There is no logged in Admin user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSELogoutError):
+                    tse.logout_user('Administrator', TSERole.ADMIN)
+
+    def test_wrong_admin_user(self, json_response):
+        """There is no logged in Admin user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            tse = TSE('TSE_ID', '')
+
+            with pytest.raises(tse_ex.TSELogoutError):
+                tse.logout_user('user', TSERole.ADMIN)
+
+    def test_user_not_time_admin(self, json_response):
+        """There is no logged in TimeAdmin user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSELogoutError):
+                    tse.logout_user('Administrator', TSERole.ADMIN)
+
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEError):
+                        tse.logout_user('xyz', TSERole.TIME_ADMIN)
+
+    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
+        tse.open()
+
+        try:
+            # tse.run_self_test()
+            # tse.initialize('123456', '12345', '54321')
+            # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+            tse.logout_user('Administ', TSERole.TIME_ADMIN)
+            # print(tse.info)
+        except Exception as e:
+            print(e)
+        tse.close()
+
+
 class TestTSERunSelfTest:
     """Tests for the run_self_test method of TSE class."""
 
