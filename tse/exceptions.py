@@ -49,5 +49,5 @@ class TSEPinBlockedError(TSEError):
     """Raised if a TSE login PIN was blocked."""
 
 
-class TSEHashError(TSEError):
-    """Raised if the authentication error orrurs."""
+class TSESecretError(TSEError):
+    """Raised if the secret is no correct."""

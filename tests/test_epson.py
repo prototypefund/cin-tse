@@ -555,7 +555,7 @@ class TestTSEInitialize:
                 assert not tse.initialize('123456', '12345', '54321')
 
 
-class TestAuthenticateUser:
+class TestLoginUser:
     """Tests for the authenticate_user method of TSE class."""
 
     def test_wrong_admin_user(self, connect_response, json_response):
@@ -577,7 +577,7 @@ class TestAuthenticateUser:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSELoginError):
-                        tse.user_login(
+                        tse.login_user(
                             'xyz', TSERole.ADMIN, '12345')
 
     def test_login_error(self, connect_response, json_response):
@@ -600,7 +600,7 @@ class TestAuthenticateUser:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSELoginError):
-                        tse.user_login(
+                        tse.login_user(
                             'xyz', TSERole.TIME_ADMIN, '12345')
 
     def test_correct_admin_user(self, connect_response, json_response):
@@ -621,7 +621,7 @@ class TestAuthenticateUser:
 
                     tse = TSE('TSE_ID', '')
 
-                    assert not tse.user_login(
+                    assert not tse.login_user(
                             'xyz', TSERole.ADMIN, '12345')
 
     def test_pin_blocked(self, connect_response, json_response):
@@ -643,11 +643,11 @@ class TestAuthenticateUser:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSEPinBlockedError):
-                        tse.user_login(
+                        tse.login_user(
                                 'xyz', TSERole.ADMIN, '12345')
 
-    def test_hash_error(self, connect_response, json_response):
-        """The PIN was blocked."""
+    def test_secret_error(self, connect_response, json_response):
+        """The secret was wrong."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,
@@ -663,8 +663,8 @@ class TestAuthenticateUser:
 
                     tse = TSE('TSE_ID', '')
 
-                    with pytest.raises(tse_ex.TSEHashError):
-                        tse.user_login(
+                    with pytest.raises(tse_ex.TSESecretError):
+                        tse.login_user(
                                 'xyz', TSERole.ADMIN, '12345')
 
     def test_unexpected_error(self, connect_response, json_response):
@@ -685,7 +685,7 @@ class TestAuthenticateUser:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSEError):
-                        tse.user_login(
+                        tse.login_user(
                                 'xyz', TSERole.ADMIN, '12345')
 
 

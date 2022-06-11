@@ -638,7 +638,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def user_login(
+    def login_user(
             self,
             user_id: str,
             role: TSERole,
@@ -741,7 +741,7 @@ class TSE():
                     f'The PIN for {role} was blocked.'
                 )
             case 'OTHER_ERROR_HOST_AUTHENTICATION_FAILED':
-                raise tse_ex.TSEHashError('Wrong authentication hash.')
+                raise tse_ex.TSESecretError('Wrong authentication secret.')
             case 'EXECUTION_OK':
                 return None
             case _:
