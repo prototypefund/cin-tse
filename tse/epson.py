@@ -484,6 +484,8 @@ class TSE():
         The data is used to calculate the hash value required
         for user authentication.
 
+        **Role: None**
+
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE could not be opened.
@@ -527,6 +529,8 @@ class TSE():
         """
         Open the TSE for operations.
 
+        **Role: None**
+
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE could not be opened.
@@ -539,7 +543,20 @@ class TSE():
         self._tse_host.tse_open(self._tse_id)
 
     def close(self) -> None:
-        """Close the TSE device."""
+        """
+        Close the TSE device.
+
+        **Role: None**
+
+        Raises:
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
         self._tse_host.tse_close(self._tse_id)
 
     def initialize(
