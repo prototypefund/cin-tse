@@ -49,6 +49,10 @@ class TSELogoutError(TSEError):
     """Raised if a TSE user could not be logged out."""
 
 
+class TSEUnauthenticatedUserError(TSEError):
+    """Raise if user is not authenticated."""
+
+
 class TSEPinBlockedError(TSEError):
     """Raised if a TSE login PIN was blocked."""
 
