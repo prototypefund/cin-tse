@@ -837,14 +837,14 @@ class TSE():
 
     def register_client(self, client_id: str) -> None:
         """
-        Logout a user with specific role.
+        Registers client ID to be used in the TSE.
+
+        The maximum length of the ID is 30 characters.
 
         **Role: TSERole.ADMIN**
 
         Args:
-            user_id: The user ID. For Admin role only the "Administrator" user
-                is allowed. For TimeAdmin all client IDs are allowed.
-            role: A TSERole.
+            client_id: The ID of the client (maximum length: 30 characters)
 
         Raises:
             ValueError: If maximum length of client ID is greater than
