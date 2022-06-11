@@ -675,7 +675,6 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-
         challenge = self._get_challenge()
 
         hash = _hash(challenge, self._secret)
@@ -839,3 +838,53 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
+    def register_secret(self, secret: str) -> None:
+        """
+        Set a new secret for authentication.
+
+        **Role: TSERole.ADMIN**
+
+        Args:
+            secret: The shared secret for authentication.
+
+        Raises:
+            ValueError: If secret has not exactly 8 characters.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'RegisterSecretKey',
+            'input': {
+                'secretKey': secret
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
+                raise ValueError('The secret must have exactly 8 characters.')
+            case 'EXECUTION_OK':
+                self._secret = secret
+
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.'
+                )

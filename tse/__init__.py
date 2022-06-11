@@ -15,6 +15,7 @@ class TSEState(Enum):
 
 class TSERole(Enum):
     """The available TSE roles."""
+
     ADMIN = auto()
     TIME_ADMIN = auto()
 

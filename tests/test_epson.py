@@ -412,6 +412,7 @@ class TestTSEInfo:
 
 class TestGetChallenge:
     """Tests for the _get_challenge method of the TSE class."""
+
     def test_unexpected_error(self, connect_response, json_response):
         """A TSEError occurred."""
         with patch('tse.epson.socket.socket') as socket_mock:
@@ -688,30 +689,6 @@ class TestAuthenticateUser:
                                 'xyz', TSERole.ADMIN, '12345')
 
 
-    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #
-    #     try:
-    #         # tse.run_self_test()
-    #         # tse.initialize('123456', '12345', '54321')
-    #         tse.authenticate_user('Administrator', TSERole.ADMIN, '12345', 'EPSONKEY')
-    #         # print(tse.info)
-    #     except Exception as e:
-    #         print(e)
-    #     tse.close()
-    #
-    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #
-    #     try:
-    #         tse.factory_reset()
-    #     except Exception as e:
-    #         print(e)
-    #
-    #     tse.close()
-    #
 class TestTSERunSelfTest:
     """Tests for the run_self_test method of TSE class."""
 
@@ -803,3 +780,58 @@ class TestTSEFactoryReset:
 
                 with pytest.raises(tse_ex.TSEError):
                     tse.factory_reset()
+
+
+class TestTSERegisterSecret:
+    """Tests for the register_secret method of TSE class."""
+
+    def test_wrong_secret_length(self, json_response):
+        """Secret has not 8 characters."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'JSON_ERROR_INVALID_PARAMETER_RANGE'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(ValueError):
+                    tse.register_secret('gg')
+
+    def test_secret_correct_length(self, json_response):
+        """Secret has 8 characters."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.register_secret('gg')
+
+
+
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
+    #     tse.open()
+    #
+    #     try:
+    #         # tse.run_self_test()
+    #         # tse.initialize('123456', '12345', '54321')
+    #         # tse.user_login('Administrator', TSERole.ADMIN, '12345')
+    #         tse.register_secret('ssssssss')
+    #         # print(tse.info)
+    #     except Exception as e:
+    #         print(e)
+    #     tse.close()
+
+    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         tse.factory_reset()
+    #     except Exception as e:
+    #         print(e)
+    #
+    #     tse.close()
+    #
