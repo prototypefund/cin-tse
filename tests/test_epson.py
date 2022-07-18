@@ -875,6 +875,66 @@ class TestDeregisterClient:
                         tse.deregister_client('xyz')
 
 
+class TestTSEClientList:
+    """Tests for the client_list method of the TSE class."""
+
+    def test_all_clients_returned(self, json_response):
+        """All clients returend successful."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+            json_response['output'] = {
+                    'registeredClientIdList': ['POS1', 'POS2']}
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                assert tse.client_list() == ['POS1', 'POS2']
+
+    def test_no_admin_user_logged_in(self, json_response):
+        """There is no logged in Admin user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
+                    tse.client_list()
+
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEError):
+                        tse.client_list()
+
+    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
+        tse.open()
+
+        try:
+            # tse.run_self_test()
+            # tse.initialize('123456', '12345', '54321')
+            tse.logout_user('Administrator', TSERole.ADMIN)
+            # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+            # tse.register_client('test')
+            # tse.deregister_client('EPSON1931')
+            print(tse.client_list())
+            # print(tse.info)
+        except Exception as e:
+            print(e)
+        tse.close()
 
 
 class TestTSERunSelfTest:
