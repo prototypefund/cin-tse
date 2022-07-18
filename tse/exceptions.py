@@ -53,8 +53,8 @@ class TSEUnauthenticatedUserError(TSEError):
     """Raise if TSE user is not authenticated."""
 
 
-class TSEUserNotExistError(TSEError):
-    """Raise if the TSE user does not exist."""
+class TSEClientNotExistError(TSEError):
+    """Raise if the TSE client does not exist."""
 
 
 class TSEPinBlockedError(TSEError):

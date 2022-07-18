@@ -556,7 +556,7 @@ class TestTSEInitialize:
 
 
 class TestLoginUser:
-    """Tests for the login_user method of TSE class."""
+    """Tests for the authenticate_user method of TSE class."""
 
     def test_wrong_admin_user(self, connect_response, json_response):
         """Wrong user for Admin role (only Administrator allowed)."""
@@ -807,20 +807,74 @@ class TestRegisterClient:
                     with pytest.raises(tse_ex.TSEError):
                         tse.register_client('xyz')
 
-    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
-    #     tse.open()
-    #
-    #     try:
-    #         # tse.run_self_test()
-    #         # tse.initialize('123456', '12345', '54321')
-    #         # tse.logout_user('Administrator', TSERole.ADMIN)
-    #         tse.login_user('Administrator', TSERole.ADMIN, '12345')
-    #         tse.register_client(31*'x')
-    #         # print(tse.info)
-    #     except Exception as e:
-    #         print(e)
-    #     tse.close()
+
+class TestDeregisterClient:
+    """Tests for the deregister_client method of TSE class."""
+
+    def test_client_registered(self, json_response):
+        """The client was registered."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.deregister_client('POS1')
+
+    def test_no_admin_user_logged_in(self, json_response):
+        """There is no logged in Admin user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
+                    tse.deregister_client('POS1')
+
+    def test_max_length_error(self, json_response):
+        """Client ID too long."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'JSON_ERROR_INVALID_PARAMETER_RANGE'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(ValueError):
+                    tse.deregister_client(31*'x')
+
+    def test_client_not_exist(self, json_response):
+        """Client ID not exist."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_CLIENT_NOT_REGISTERED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEClientNotExistError):
+                    tse.deregister_client(31*'x')
+
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response
+                        ):
+
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEError):
+                        tse.deregister_client('xyz')
+
+
 
 
 class TestTSERunSelfTest:

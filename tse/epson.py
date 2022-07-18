@@ -765,7 +765,8 @@ class TSE():
             role: A TSERole.
 
         Raises:
-            tse.exceptions.TSELogoutError: If a logout error occurs.
+            tse.exceptions.TSELogoutError: If user is not logged in with
+                the given role.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -820,8 +821,8 @@ class TSE():
         match code:
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSELogoutError(
-                    'Only the "Administrator" user can be logged in '
-                    'with TSERole.ADMIN role.'
+                    f'The user {user_id} not logged in with '
+                    'TSERole.ADMIN role.'
                 )
             case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
                 raise tse_ex.TSELogoutError(
@@ -896,6 +897,75 @@ class TSE():
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.'
                 )
+
+    def deregister_client(self, client_id: str) -> None:
+        """
+        Deregisters a client.
+
+        The maximum length of the ID is 30 characters.
+
+        **Role: TSERole.ADMIN**
+
+        Args:
+            client_id: The ID of the client (maximum length: 30 characters)
+
+        Raises:
+            ValueError: If maximum length of client ID is greater than
+                30 characters.
+            tse.exceptions.TSEClientNotExistError: If the client does
+                not exist.
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'DeregisterClient',
+            'input': {
+                'clientId': client_id,
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
+                raise tse_ex.TSEClientNotExistError(
+                    f'The client {client_id} does not exist.'
+                )
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.ADMIN role.'
+                )
+            case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
+                raise ValueError(
+                    'Maximum length of client ID is 30 characters.'
+                )
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {result}.'
+                )
+
 
     def run_self_test(self) -> None:
         """
