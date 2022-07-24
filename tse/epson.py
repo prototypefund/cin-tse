@@ -5,6 +5,7 @@ In this module the TSE protocol for Epson devices and helpers are implemented.
 """
 import socket
 import json
+from datetime import datetime
 from hashlib import sha256
 from base64 import b64encode
 from datetime import datetime
@@ -1007,6 +1008,8 @@ class TSE():
 
         code = result['result']
 
+        print(result)
+
         match code:
             case 'EXECUTION_OK':
                 return result['output']['registeredClientIdList']
@@ -1158,3 +1161,48 @@ class TSE():
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.'
                 )
+
+    def update_time(self, client_id: str, time: datetime) -> None:
+        """
+        Raises:
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.TIME_ADMIN.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'UpdateTime',
+            'input': {
+                'userId': client_id,
+                'newDateTime': time.isoformat(timespec='seconds') + 'Z',
+                'useTimeSync': False
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
+            case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
+                raise tse_ex.TSELogoutError(
+                    f'The user "{client_id}" is not logged in with '
+                    'TSERole.TIME_ADMIN or TSERole.ADMIN role.')
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
