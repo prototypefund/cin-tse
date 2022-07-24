@@ -63,3 +63,7 @@ class TSEPinBlockedError(TSEError):
 
 class TSESecretError(TSEError):
     """Raised if the secret is no correct."""
+
+
+class TSEInternalError(TSEError):
+    """Raised if the an internal TSE error occurs."""
