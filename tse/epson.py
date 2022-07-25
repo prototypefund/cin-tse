@@ -583,6 +583,10 @@ class TSE():
             tse.exceptions.TSECertificateExpiredError: if the certificate of
                 the TSE is expired. Either the validity of the certificate has
                 expired or the TSE was decommissioned.
+            tse.exceptions.TSEPukStateError: If the PUK change required. Maybe
+                the TSE is not initialized.
+            tse.exceptions.TSEPinStateError: If the PIN change required. Maybe
+                the TSE is not initialized.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
