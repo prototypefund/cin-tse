@@ -75,3 +75,7 @@ class TSEInternalError(TSEError):
 
 class TSEDecommissionedError(TSEError):
     """Raised if the TSE is decommissioned."""
+
+
+class TSECertificateExpiredError(TSEError):
+    """Raised if the TSE certificate is expired.."""
