@@ -1187,6 +1187,8 @@ class TSE():
 
         Raises:
             ValueError: If secret has not exactly 8 characters.
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
             tse.exceptions.TSEInternalError: If an internal TSE error occurred.
                 Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
@@ -1218,6 +1220,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.ADMIN role.'
+                )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '

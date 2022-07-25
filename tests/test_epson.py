@@ -1040,6 +1040,18 @@ class TestTSERegisterSecret:
                 with pytest.raises(ValueError):
                     tse.register_secret('gg')
 
+    def test_unauthenticated_user(self, json_response):
+        """It is an unauthenticated user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'JSON_ERROR_INVALID_PARAMETER_RANGE'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(ValueError):
+                    tse.register_secret('gg')
+
     def test_secret_correct_length(self, json_response):
         """Secret has 8 characters."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
@@ -1264,7 +1276,7 @@ class TestTSEDisableSecureElement:
         try:
             # tse.factory_reset()
             # tse.run_self_test()
-            # tse.register_secret('EPSONKEY')
+            tse.register_secret('EPSONKEY')
             # print(tse._get_challenge())
             # tse.initialize('123456', '12345', '54321')
             # tse.login_user('Administrator', TSERole.ADMIN, '12345')
