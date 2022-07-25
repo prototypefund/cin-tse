@@ -778,7 +778,7 @@ class TSE():
 
         Raises:
             tse.exceptions.TSELogoutError: If user is not logged in with
-                the given role.
+                the given role or the TSE is decommissioned.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -831,6 +831,11 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                raise tse_ex.TSECertificateExpiredError(
+                    f'The certificate of the TSE {self._tse_id} is expired. '
+                    'Either the validity of the certificate has expired or '
+                    'the TSE was decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.'
@@ -839,6 +844,11 @@ class TSE():
                 raise tse_ex.TSELogoutError(
                     f'The user {user_id} not logged in with '
                     'TSERole.ADMIN role.'
+                )
+            case 'TSE1_ERROR_AUTHENTICATION_USER_NOT_LOGGED_IN':
+                raise tse_ex.TSELogoutError(
+                    'The Given user is not authenticated. Maybe the TSE is '
+                    'decommissioned.'
                 )
             case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
                 raise tse_ex.TSELogoutError(
@@ -868,8 +878,10 @@ class TSE():
                 30 characters.
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
-            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
-                Normally, the TSE host must be restarted.
+            tse.exceptions.TSEInternalError: The internal TSE error occures if
+                the TSE is decommissioned or if an internal error occures.
+                If the TSE is not decommissioned, the TSE host must be
+                restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -907,8 +919,10 @@ class TSE():
                 )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
-                    'A internal TSE error occurred. Normally, '
-                    'the TSE host must be restarted.')
+                    'The internal TSE error occures if the TSE is '
+                    'decommissioned or if an internal error occures. '
+                    'If the TSE is not decommissioned, the TSE host must'
+                    'be restarted.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
                     'No user logged in with TSERole.ADMIN role.'
@@ -943,8 +957,10 @@ class TSE():
                 not exist.
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
-            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
-                Normally, the TSE host must be restarted.
+            tse.exceptions.TSEInternalError: The internal TSE error occures if
+                the TSE is decommissioned or if an internal error occures.
+                If the TSE is not decommissioned, the TSE host must be
+                restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -982,8 +998,10 @@ class TSE():
                 )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
-                    'A internal TSE error occurred. Normally, '
-                    'the TSE host must be restarted.')
+                    'The internal TSE error occures if the TSE is '
+                    'decommissioned or if an internal error occures. '
+                    'If the TSE is not decommissioned, the TSE host must'
+                    'be restarted.')
             case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
                 raise tse_ex.TSEClientNotExistError(
                     f'The client {client_id} does not exist.'
@@ -1015,8 +1033,10 @@ class TSE():
         Raises:
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
-            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
-                Normally, the TSE host must be restarted.
+            tse.exceptions.TSEInternalError: The internal TSE error occures if
+                the TSE is decommissioned or if an internal error occures.
+                If the TSE is not decommissioned, the TSE host must be
+                restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -1052,8 +1072,10 @@ class TSE():
                 )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
-                    'A internal TSE error occurred. Normally, '
-                    'the TSE host must be restarted.')
+                    'The internal TSE error occures if the TSE is '
+                    'decommissioned or if an internal error occures. '
+                    'If the TSE is not decommissioned, the TSE host must'
+                    'be restarted.')
             case 'EXECUTION_OK':
                 return result['output']['registeredClientIdList']
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
@@ -1231,6 +1253,8 @@ class TSE():
                 as TSERole.TIME_ADMIN.
             tse.exceptions.TSEInternalError: If an internal TSE error occurred.
                 Normally, the TSE host must be restarted.
+            tse.exceptions.TSEDecommissionedError: If the TSE is
+                decommissioned.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
@@ -1263,6 +1287,9 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_TSE_DECOMMISSIONED':
+                raise tse_ex.TSEDecommissionedError(
+                    'The TSE is decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.'
@@ -1296,8 +1323,10 @@ class TSE():
         Raises:
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
-            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
-                Normally, the TSE host must be restarted.
+            tse.exceptions.TSEInternalError: The internal TSE error occures if
+                the TSE is decommissioned or if an internal error occures.
+                If the TSE is not decommissioned, the TSE host must be
+                restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
@@ -1337,8 +1366,10 @@ class TSE():
                 )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
-                    'A internal TSE error occurred. Normally, '
-                    'the TSE host must be restarted.')
+                    'The internal TSE error occures if the TSE is '
+                    'decommissioned or if an internal error occures. '
+                    'If the TSE is not decommissioned, the TSE host must'
+                    'be restarted.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
                     'No user logged in with TSERole.ADMIN role.')

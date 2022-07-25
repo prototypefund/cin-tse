@@ -1108,6 +1108,20 @@ class TestTSEUpdateTime:
                     tse.update_time(
                         'TEST', datetime(2022, 8, 11, 23, 59, 59))
 
+    def test_decommissioned_error(self, json_response):
+        """The TSE is decommissioned."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'TSE1_ERROR_TSE_DECOMMISSIONED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEDecommissionedError):
+                    tse.update_time(
+                        'TEST', datetime(2022, 8, 11, 23, 59, 59))
+
 
 class TestTSELock:
     """Tests for the lock method of the TSE class."""
@@ -1244,7 +1258,7 @@ class TestTSEDisableSecureElement:
         # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
         date_time = datetime(2022, 8, 11, 23, 59, 59)
 
-        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='12345678')
+        tse = TSE(epson_tse_id, epson_tse_host_ip)
         tse.open()
 
         try:
@@ -1252,7 +1266,7 @@ class TestTSEDisableSecureElement:
             # tse.run_self_test()
             # tse.register_secret('EPSONKEY')
             # print(tse._get_challenge())
-            tse.initialize('123456', '12345', '54321')
+            # tse.initialize('123456', '12345', '54321')
             # tse.login_user('Administrator', TSERole.ADMIN, '12345')
             # tse.logout_user('Administrator', TSERole.ADMIN)
             # tse.register_client('test')
