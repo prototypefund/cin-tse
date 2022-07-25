@@ -580,6 +580,9 @@ class TSE():
 
         Raise:
             ValueError: If the PUK or PIN is too long.
+            tse.exceptions.TSECertificateExpiredError: if the certificate of
+                the TSE is expired. Either the validity of the certificate has
+                expired or the TSE was decommissioned.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -628,6 +631,11 @@ class TSE():
                 raise tse_ex.TSEAlreadyInitializedError(
                     f'The TSE {self._tse_id} was already initialized.'
                 )
+            case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                raise tse_ex.TSECertificateExpiredError(
+                    f'The certificate of the TSE {self._tse_id} is expired. '
+                    'Either the validity of the certificate has expired or '
+                    'the TSE was decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.'
@@ -1096,8 +1104,7 @@ class TSE():
                 return None
             case _:
                 raise tse_ex.TSESelfTestError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def factory_reset(self) -> None:
         """
