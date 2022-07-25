@@ -1046,6 +1046,8 @@ class TSE():
         """
         Run self test for TSE device.
 
+        After 25 hours, the self-test must be performed again.
+
         **Role: None**
 
         Raises:

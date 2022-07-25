@@ -1164,8 +1164,8 @@ class TestTSELock:
             # tse.register_client('test')
             # tse.deregister_client('EPSON1931')
             # tse.update_time('Administrato', date_time)
-            tse.lock(False)
-            # print(tse.info)
+            # tse.lock(False)
+            print(tse.info.needs_self_test)
             # print(tse.client_list())
         except Exception as e:
             print(e)
