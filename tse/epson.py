@@ -1315,3 +1315,66 @@ class TSE():
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
+
+    def disable_secure_element(self) -> None:
+        """
+        Take the TSE out of operation.
+
+        This method disables the Secure Element in a way that none of its
+        functionality can be used anymore.
+
+        **Role: TSERole.ADMIN**
+
+        Raises:
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
+            tse.exceptions.TSEDecommissionedError: If the TSE is
+                decommissioned.
+            tse.exceptions.TSETimeNotSetError: If the TSE time is not set.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'DisableSecureElement',
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
+            case 'TSE1_ERROR_TSE_DECOMMISSIONED':
+                raise tse_ex.TSEDecommissionedError(
+                    'The TSE is decommissioned.')
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.ADMIN role.')
+            case 'TSE1_ERROR_NO_TIME_SET':
+                raise tse_ex.TSETimeNotSetError(
+                    'The TSE time is not set.')
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
