@@ -78,4 +78,8 @@ class TSEDecommissionedError(TSEError):
 
 
 class TSECertificateExpiredError(TSEError):
-    """Raised if the TSE certificate is expired.."""
+    """Raised if the TSE certificate is expired."""
+
+
+class TSEPukStateError(TSEError):
+    """Raised if the change PUK is required."""
