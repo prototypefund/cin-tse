@@ -566,30 +566,6 @@ class TestTSEInitialize:
                 with pytest.raises(tse_ex.TSEError):
                     tse.initialize('123456', '12345', '54321')
 
-    def test_puk_change_required(self, json_response):
-        """A PUK change is required."""
-        with patch('tse.epson._TSEHost.__init__', return_value=None):
-            json_response['result'] = 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE'
-
-            with patch(
-                    'tse.epson._TSEHost.tse_send', return_value=json_response):
-                tse = TSE('TSE_ID', '')
-
-                with pytest.raises(tse_ex.TSEPukStateError):
-                    tse.initialize('123456', '12345', '54321')
-
-    def test_pin_change_required(self, json_response):
-        """A PIN change is required."""
-        with patch('tse.epson._TSEHost.__init__', return_value=None):
-            json_response['result'] = 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE'
-
-            with patch(
-                    'tse.epson._TSEHost.tse_send', return_value=json_response):
-                tse = TSE('TSE_ID', '')
-
-                with pytest.raises(tse_ex.TSEPinStateError):
-                    tse.initialize('123456', '12345', '54321')
-
 
 class TestLoginUser:
     """Tests for the authenticate_user method of TSE class."""
@@ -721,6 +697,36 @@ class TestLoginUser:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSEError):
+                        tse.login_user(
+                                'xyz', TSERole.ADMIN, '12345')
+
+    def test_puk_change_required(self, json_response):
+        """A PUK change is required."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEPukStateError):
+                        tse.login_user(
+                                'xyz', TSERole.ADMIN, '12345')
+
+    def test_pin_change_required(self, json_response):
+        """A PIN change is required."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        return_value=json_response):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEPinStateError):
                         tse.login_user(
                                 'xyz', TSERole.ADMIN, '12345')
 

@@ -583,10 +583,6 @@ class TSE():
             tse.exceptions.TSECertificateExpiredError: if the certificate of
                 the TSE is expired. Either the validity of the certificate has
                 expired or the TSE was decommissioned.
-            tse.exceptions.TSEPukStateError: If the PUK change required. Maybe
-                the TSE is not initialized.
-            tse.exceptions.TSEPinStateError: If the PIN change required. Maybe
-                the TSE is not initialized.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -644,14 +640,6 @@ class TSE():
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.'
                 )
-            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
-                raise tse_ex.TSEPukStateError(
-                    'The PUK change required. Maybe the TSE is not initialized'
-                )
-            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
-                raise tse_ex.TSEPinStateError(
-                    'The PIN change required. Maybe the TSE is not initialized'
-                )
             case 'EXECUTION_OK':
                 return None
             case _:
@@ -690,6 +678,10 @@ class TSE():
             tse.exceptions.TSEPinBlockedError: If the PIN was blocked.
             tse.exceptions.TSESecretError: If the secret for authentication
                 was wrong.
+            tse.exceptions.TSEPukStateError: If the PUK change required. Maybe
+                the TSE is not initialized.
+            tse.exceptions.TSEPinStateError: If the PIN change required. Maybe
+                the TSE is not initialized.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -748,6 +740,14 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
+                raise tse_ex.TSEPukStateError(
+                    'The PUK change required. Maybe the TSE is not initialized'
+                )
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
+                raise tse_ex.TSEPinStateError(
+                    'The PIN change required. Maybe the TSE is not initialized'
+                )
             case 'OTHER_ERROR_INVALID_ADMIN_USER_ID':
                 raise tse_ex.TSELoginError(
                     'Only the "Administrator" user can be logged in '
