@@ -857,6 +857,8 @@ class TSE():
                 30 characters.
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -888,6 +890,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
                     'No user logged in with TSERole.ADMIN role.'
@@ -922,6 +928,8 @@ class TSE():
                 not exist.
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -953,6 +961,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
             case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
                 raise tse_ex.TSEClientNotExistError(
                     f'The client {client_id} does not exist.'
@@ -984,6 +996,8 @@ class TSE():
         Raises:
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -1013,6 +1027,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
             case 'EXECUTION_OK':
                 return result['output']['registeredClientIdList']
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
@@ -1033,7 +1051,6 @@ class TSE():
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
-            tse.exceptions.TSESelfTestError: If an self test fails.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
@@ -1124,6 +1141,8 @@ class TSE():
 
         Raises:
             ValueError: If secret has not exactly 8 characters.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
@@ -1153,6 +1172,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
             case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
                 raise ValueError('The secret must have exactly 8 characters.')
             case 'EXECUTION_OK':
