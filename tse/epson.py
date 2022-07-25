@@ -673,7 +673,6 @@ class TSE():
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
-            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -824,6 +823,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSELogoutError(
                     f'The user {user_id} not logged in with '
@@ -890,6 +893,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -961,6 +968,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1027,6 +1038,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1212,6 +1227,7 @@ class TSE():
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
@@ -1240,6 +1256,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1273,6 +1293,7 @@ class TSE():
                 Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -1303,6 +1324,10 @@ class TSE():
         code = result['result']
 
         match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1320,8 +1345,9 @@ class TSE():
         """
         Take the TSE out of operation.
 
-        This method disables the Secure Element in a way that none of its
-        functionality can be used anymore.
+        .. warning::
+            This method disables the Secure Element in a way that none of its
+            functionality can be used anymore.
 
         **Role: TSERole.ADMIN**
 

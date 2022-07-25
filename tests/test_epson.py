@@ -1227,53 +1227,29 @@ class TestTSEDisableSecureElement:
 
                 with pytest.raises(tse_ex.TSEError):
                     tse.disable_secure_element()
-    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
-    #     date_time = datetime(2022, 8, 11, 23, 59, 59)
-    #
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
-    #     tse.open()
-    #
-    #     try:
-    #         # tse.factory_reset()
-    #         # tse.run_self_test()
-    #         # tse.initialize('123456', '12345', '54321')
-    #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
-    #         # tse.logout_user('Administrator', TSERole.ADMIN)
-    #         # tse.register_client('test')
-    #         # tse.deregister_client('EPSON1931')
-    #         # tse.update_time('Administrator', date_time)
-    #         # tse.lock(False)
-    #         # print(tse.info)
-    #         # print(tse.client_list())
-    #         print(tse.disable_secure_element())
-    #     except Exception as e:
-    #         print(e)
-    #     tse.close()
 
+    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+        # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
+        date_time = datetime(2022, 8, 11, 23, 59, 59)
 
-    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
-    #     tse.open()
-    #
-    #     try:
-    #         # tse.run_self_test()
-    #         # tse.initialize('123456', '12345', '54321')
-    #         # tse.user_login('Administrator', TSERole.ADMIN, '12345')
-    #         tse.register_secret('ssssssss')
-    #         # print(tse.info)
-    #     except Exception as e:
-    #         print(e)
-    #     tse.close()
+        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
+        tse.open()
 
-    # def test_reset(self, epson_tse_host_ip, epson_tse_id):
-    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
-    #     tse.open()
-    #
-    #     try:
-    #         tse.factory_reset()
-    #     except Exception as e:
-    #         print(e)
-    #
-    #     tse.close()
-    #
+        try:
+            # tse.factory_reset()
+            # tse.register_secret('12345678')
+            # print(tse._get_challenge())
+            # tse.run_self_test()
+            # tse.initialize('123456', '12345', '54321')
+            # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+            # tse.logout_user('Administrator', TSERole.ADMIN)
+            # tse.register_client('test')
+            # tse.deregister_client('test')
+            # print(tse.client_list())
+            # tse.update_time('Administrator', date_time)
+            # tse.lock(False)
+            # print(tse.info)
+            # print(tse.disable_secure_element())
+        except Exception as e:
+            print(e)
+        tse.close()
