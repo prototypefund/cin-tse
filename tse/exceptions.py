@@ -83,3 +83,7 @@ class TSECertificateExpiredError(TSEError):
 
 class TSEPukStateError(TSEError):
     """Raised if the change PUK is required."""
+
+
+class TSEPinStateError(TSEError):
+    """Raised if the change PIN is required."""
