@@ -1224,3 +1224,65 @@ class TSE():
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
+
+    def lock(self, state: bool) -> None:
+        """
+        Lock the TSE.
+
+        Transactions and export functions are not available when TSE is locked.
+        Only functions belonging to User Authentication can be used.
+
+        **Role: TSERole.ADMIN**
+
+        Args:
+            state: The lock state as boolean.
+
+        Raises:
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
+            tse.exceptions.TSEInternalError: If an internal TSE error occurred.
+                Normally, the TSE host must be restarted.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        if state:
+            function = 'LockTSE'
+        else:
+            function = 'UnlockTSE'
+
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': function,
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'TSE1_ERROR_NOT_AUTHORIZED':
+                raise tse_ex.TSEInternalError(
+                    'A internal TSE error occurred. Normally, '
+                    'the TSE host must be restarted.')
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.ADMIN role.')
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
