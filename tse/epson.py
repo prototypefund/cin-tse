@@ -653,6 +653,10 @@ class TSE():
         The role needed to call a method is described in the documentation
         of the method.
 
+        .. note::
+            The TSERole.ADMIN will be logged out automatically after 15
+            minutes. The TimeAdmin will be logged out after 8 hours.
+
         **Role: None**
 
         Args:
