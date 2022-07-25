@@ -644,6 +644,10 @@ class TSE():
                 raise tse_ex.TSEPukStateError(
                     'The PUK change required. Maybe the TSE is not initialized'
                 )
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
+                raise tse_ex.TSEPinStateError(
+                    'The PIN change required. Maybe the TSE is not initialized'
+                )
             case 'EXECUTION_OK':
                 return None
             case _:
