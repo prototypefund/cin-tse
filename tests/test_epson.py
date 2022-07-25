@@ -566,6 +566,18 @@ class TestTSEInitialize:
                 with pytest.raises(tse_ex.TSEError):
                     tse.initialize('123456', '12345', '54321')
 
+    def test_puk_change_required(self, json_response):
+        """A PUK change is required."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEPukStateError):
+                    tse.initialize('123456', '12345', '54321')
+
 
 class TestLoginUser:
     """Tests for the authenticate_user method of TSE class."""
@@ -1276,17 +1288,17 @@ class TestTSEDisableSecureElement:
         try:
             # tse.factory_reset()
             # tse.run_self_test()
-            tse.register_secret('EPSONKEY')
+            # tse.register_secret('EPSONKEY')
             # print(tse._get_challenge())
             # tse.initialize('123456', '12345', '54321')
-            # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+            tse.login_user('Administrator', TSERole.ADMIN, '12345')
             # tse.logout_user('Administrator', TSERole.ADMIN)
             # tse.register_client('test')
             # tse.deregister_client('test')
             # print(tse.client_list())
             # tse.update_time('Administrator', date_time)
             # tse.lock(False)
-            print(tse.info)
+            # print(tse.info)
             # print(tse.disable_secure_element())
         except Exception as e:
             print(e)

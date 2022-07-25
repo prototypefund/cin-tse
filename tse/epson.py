@@ -640,6 +640,10 @@ class TSE():
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.'
                 )
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
+                raise tse_ex.TSEPukStateError(
+                    'The PUK change required. Maybe the TSE is not initialized'
+                )
             case 'EXECUTION_OK':
                 return None
             case _:
