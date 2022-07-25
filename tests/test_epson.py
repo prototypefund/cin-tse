@@ -554,6 +554,18 @@ class TestTSEInitialize:
 
                 assert not tse.initialize('123456', '12345', '54321')
 
+    def test_certificate_expired(self, json_response):
+        """The certificate was expired."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_CERTIFICATE_EXPIRED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.initialize('123456', '12345', '54321')
+
 
 class TestLoginUser:
     """Tests for the authenticate_user method of TSE class."""
@@ -1216,7 +1228,7 @@ class TestTSEDisableSecureElement:
                 with pytest.raises(tse_ex.TSETimeNotSetError):
                     tse.disable_secure_element()
 
-    def test_unexpected_error(self, connect_response, json_response):
+    def test_unexpected_error(self, json_response):
         """A TSEError occurred."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'XYZ'
@@ -1232,15 +1244,15 @@ class TestTSEDisableSecureElement:
         # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
         date_time = datetime(2022, 8, 11, 23, 59, 59)
 
-        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
+        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='12345678')
         tse.open()
 
         try:
             # tse.factory_reset()
-            # tse.register_secret('12345678')
-            # print(tse._get_challenge())
             # tse.run_self_test()
-            # tse.initialize('123456', '12345', '54321')
+            # tse.register_secret('EPSONKEY')
+            # print(tse._get_challenge())
+            tse.initialize('123456', '12345', '54321')
             # tse.login_user('Administrator', TSERole.ADMIN, '12345')
             # tse.logout_user('Administrator', TSERole.ADMIN)
             # tse.register_client('test')
@@ -1248,7 +1260,7 @@ class TestTSEDisableSecureElement:
             # print(tse.client_list())
             # tse.update_time('Administrator', date_time)
             # tse.lock(False)
-            # print(tse.info)
+            print(tse.info)
             # print(tse.disable_secure_element())
         except Exception as e:
             print(e)
