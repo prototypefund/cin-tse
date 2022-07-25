@@ -919,23 +919,6 @@ class TestTSEClientList:
                     with pytest.raises(tse_ex.TSEError):
                         tse.client_list()
 
-    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-        tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
-        tse.open()
-
-        try:
-            # tse.run_self_test()
-            # tse.initialize('123456', '12345', '54321')
-            tse.logout_user('Administrator', TSERole.ADMIN)
-            # tse.login_user('Administrator', TSERole.ADMIN, '12345')
-            # tse.register_client('test')
-            # tse.deregister_client('EPSON1931')
-            print(tse.client_list())
-            # print(tse.info)
-        except Exception as e:
-            print(e)
-        tse.close()
-
 
 class TestTSERunSelfTest:
     """Tests for the run_self_test method of TSE class."""
@@ -1057,6 +1040,83 @@ class TestTSERegisterSecret:
                 assert not tse.register_secret('gg')
 
 
+class TestTSEUpdateTime:
+    """Tests for the update_time method of the TSE class."""
+
+    def test_execution_ok(self, connect_response, json_response):
+        """The Execution was OK."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                assert not tse.update_time(
+                        'Administrator', datetime(2022, 8, 11, 23, 59, 59))
+
+    def test_internal_error(self, json_response):
+        """An internal error occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_NOT_AUTHORIZED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEInternalError):
+                    tse.update_time(
+                        'Administrator', datetime(2022, 8, 11, 23, 59, 59))
+
+    def test_unauthenticated_user(self, json_response):
+        """The user in unauthenticated."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
+                    tse.update_time(
+                        'TEST', datetime(2022, 8, 11, 23, 59, 59))
+
+    def test_unexpected_error(self, connect_response, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.update_time(
+                        'TEST', datetime(2022, 8, 11, 23, 59, 59))
+
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
+    #     date_time = datetime(2022, 8, 11, 23, 59, 59)
+    #
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')
+    #     tse.open()
+    #
+    #     try:
+    #         # tse.run_self_test()
+    #         # tse.initialize('123456', '12345', '54321')
+    #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+    #         # tse.logout_user('Administrator', TSERole.ADMIN)
+    #         # tse.register_client('test')
+    #         # tse.deregister_client('EPSON1931')
+    #         tse.update_time('Administrato', date_time)
+    #         # print(tse.info)
+    #         # print(tse.client_list())
+    #     except Exception as e:
+    #         print(e)
+    #     tse.close()
+    #
 
     # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
     #     tse = TSE(epson_tse_id, epson_tse_host_ip, secret='ssssssss')

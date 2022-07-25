@@ -1008,8 +1008,6 @@ class TSE():
 
         code = result['result']
 
-        print(result)
-
         match code:
             case 'EXECUTION_OK':
                 return result['output']['registeredClientIdList']
@@ -1162,13 +1160,33 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def update_time(self, client_id: str, time: datetime) -> None:
+    def update_time(self, user_id: str, time: datetime) -> None:
         """
+        Update the TSE time.
+
+        Date and time specified from POS to synchronize TSE and POS date
+        and time.
+
+        **Role: TSERole.TIME_ADMIN, TSERole.ADMIN**
+
+        Args:
+            user_id: The user who wants to set the time. This can be a
+                registered client or the Administrator user. The user must
+                be logged in with at least the TSERole.TIME_ADMIN role.
+            time: The time as datetime type.
+
         Raises:
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.TIME_ADMIN.
             tse.exceptions.TSEInternalError: If an internal TSE error occurred.
                 Normally, the TSE host must be restarted.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
         """
         data = {
             'storage': {
@@ -1177,7 +1195,7 @@ class TSE():
             },
             'function': 'UpdateTime',
             'input': {
-                'userId': client_id,
+                'userId': user_id,
                 'newDateTime': time.isoformat(timespec='seconds') + 'Z',
                 'useTimeSync': False
             },
@@ -1198,8 +1216,8 @@ class TSE():
                     'A internal TSE error occurred. Normally, '
                     'the TSE host must be restarted.')
             case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
-                raise tse_ex.TSELogoutError(
-                    f'The user "{client_id}" is not logged in with '
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    f'The user "{user_id}" is not logged in with '
                     'TSERole.TIME_ADMIN or TSERole.ADMIN role.')
             case 'EXECUTION_OK':
                 return None
