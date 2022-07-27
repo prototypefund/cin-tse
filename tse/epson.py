@@ -979,28 +979,28 @@ class TSE():
             self._tse_id, data, timeout=120)
 
         code = result['result']
-        error = None
+        error: Optional[tse_ex.TSEError] = None
 
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
-                raise tse_ex.TSEPinStateError(
+                error = tse_ex.TSEPinStateError(
                     'The PIN change required. Maybe the TSE is '
                     'not initialized')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
-                raise tse_ex.TSEPukStateError(
+                error = tse_ex.TSEPukStateError(
                     'The PUK change required. Maybe the TSE is '
                     'not initialized')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
-                raise tse_ex.TSENeedsSelfTestError(
+                error = tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_AUTHENTICATION_PIN_BLOCKED':
-                raise tse_ex.TSEAuthenticationError(
+                error = tse_ex.TSEAuthenticationError(
                     'The PUK is blocked. You must replace the TSE.')
             case 'TSE1_ERROR_AUTHENTICATION_FAILED':
-                raise tse_ex.TSEAuthenticationError(
+                error = tse_ex.TSEAuthenticationError(
                     'Wrong PUK given.')
             case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
-                raise tse_ex.TSECertificateExpiredError(
+                error = tse_ex.TSECertificateExpiredError(
                     f'The certificate of the TSE {self._tse_id} is expired. '
                     'Either the validity of the certificate has expired or '
                     'the TSE was decommissioned.')
@@ -1008,7 +1008,7 @@ class TSE():
                 error = tse_ex.TSEPinError(
                     'The new PIN must be different from the old one.')
             case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
-                raise tse_ex.TSEPinError(
+                error = tse_ex.TSEPinError(
                     'The length of the PIN must be 5 characters.')
             case 'EXECUTION_OK':
                 return None
