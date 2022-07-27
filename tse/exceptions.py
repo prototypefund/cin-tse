@@ -93,5 +93,5 @@ class TSEPinStateError(TSEError):
     """Raised if the change PIN is required."""
 
 
-class TSENewPinError(TSEError):
-    """Raised if an error with new PIN occurs."""
+class TSEPinError(TSEError):
+    """Raised if an error with PIN occurs."""

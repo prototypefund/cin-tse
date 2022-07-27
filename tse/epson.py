@@ -791,6 +791,9 @@ class TSE():
         Raises:
             tse.exceptions.TSELogoutError: If user is not logged in with
                 the given role or the TSE is decommissioned.
+            tse.exceptions.TSECertificateExpiredError: if the certificate of
+                the TSE is expired. Either the validity of the certificate has
+                expired or the TSE was decommissioned.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -873,6 +876,175 @@ class TSE():
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.'
                 )
+
+    def change_pin(self, role: TSERole, puk: str, new_pin) -> None:
+        """
+        Set or unblock the PIN of a Role.
+
+        This method can be used to reset the PIN of a role. If the PIN has
+        been blocked, it will be unblocked again with the new PIN.
+        The PIN/PUK authentication can fail up to 3 times, afterwards the
+        PUK/PIN will be blocked automatically. If PUK is blocked, it cannot
+        be recovered. The only way to recover is to replace.
+
+        **Role: None**
+
+        Args:
+            role: A TSERole.
+            puk: The PUK.
+            new_pin: The new PIN for the role.
+
+        Raises:
+            tse.exceptions.TSELoginError: If a login error occurs.
+            tse.exceptions.TSEPinBlockedError: If the PIN was blocked.
+
+            tse.exceptions.TSEPinError: If the new PIN is not different from
+                the old one or the given PIN was longer or shorter than 5
+                characters.
+            tse.exceptions.TSEAuthenticationError: If the PUK is blocked or the
+                given PUK was wrong.
+            tse.exceptions.TSESecretError: If the secret for authentication
+                was wrong.
+            tse.exceptions.TSEPukStateError: If the PUK change required. Maybe
+                the TSE is not initialized.
+            tse.exceptions.TSEPinStateError: If the PIN change required. Maybe
+                the TSE is not initialized.
+            tse.exceptions.TSECertificateExpiredError: if the certificate of
+                the TSE is expired. Either the validity of the certificate has
+                expired or the TSE was decommissioned.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        if role == TSERole.ADMIN:
+            function = 'UnblockUserForAdmin'
+        elif role == TSERole.TIME_ADMIN:
+            function = 'UnblockUserForTimeAdmin'
+
+        challenge = self._get_challenge()
+        hash = _hash(challenge, self._secret)
+
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'AuthenticateHost',
+            'input': {
+                'userId': 'Administrator',
+                'hash': hash.decode(),
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'EXECUTION_OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
+
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': function,
+            'input': {
+                'userId': 'Administrator',
+                'puk': puk,
+                'newPin': new_pin
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+        error = None
+
+        match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
+                raise tse_ex.TSEPinStateError(
+                    'The PIN change required. Maybe the TSE is '
+                    'not initialized')
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
+                raise tse_ex.TSEPukStateError(
+                    'The PUK change required. Maybe the TSE is '
+                    'not initialized')
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.')
+            case 'TSE1_ERROR_AUTHENTICATION_PIN_BLOCKED':
+                raise tse_ex.TSEAuthenticationError(
+                    'The PUK is blocked. You must replace the TSE.')
+            case 'TSE1_ERROR_AUTHENTICATION_FAILED':
+                raise tse_ex.TSEAuthenticationError(
+                    'Wrong PUK given.')
+            case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                raise tse_ex.TSECertificateExpiredError(
+                    f'The certificate of the TSE {self._tse_id} is expired. '
+                    'Either the validity of the certificate has expired or '
+                    'the TSE was decommissioned.')
+            case 'TSE1_ERROR_TSE_INVALID_PARAMETER':
+                error = tse_ex.TSEPinError(
+                    'The new PIN must be different from the old one.')
+            case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
+                raise tse_ex.TSEPinError(
+                    'The length of the PIN must be 5 characters.')
+            case 'EXECUTION_OK':
+                return None
+            case _:
+                error = tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
+
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'DeauthenticateHost',
+            'input': {
+                'userId': 'Administrator'
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'EXECUTION_OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
+
+        if error:
+            raise error
 
     def register_client(self, client_id: str) -> None:
         """
