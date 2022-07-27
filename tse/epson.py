@@ -10,7 +10,7 @@ from hashlib import sha256
 from base64 import b64encode
 from datetime import datetime
 from xml.etree import ElementTree
-from typing import Optional
+from typing import Optional, List
 from tse import exceptions as tse_ex
 from tse import TSEInfo, TSEState, TSERole
 
@@ -877,7 +877,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def change_pin(self, role: TSERole, puk: str, new_pin) -> None:
+    def change_pin(self, role: TSERole, puk: str, new_pin: str) -> None:
         """
         Set or unblock the PIN of a Role.
 
@@ -1205,7 +1205,7 @@ class TSE():
                     f'Unexpected TSE error occures: {result}.'
                 )
 
-    def client_list(self):
+    def client_list(self) -> List[str]:
         """
         List all client IDs of registered clients.
 
