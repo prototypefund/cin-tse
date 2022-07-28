@@ -795,6 +795,198 @@ class TestLogoutUser:
                         tse.logout_user('xyz', TSERole.TIME_ADMIN)
 
 
+class TestChangePin:
+    """Tests for the change_pin method of TSE class."""
+
+    def test_puk_change_required(self, json_response):
+        """A PUK change is required."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEPukStateError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_pin_change_required(self, json_response):
+        """A PIN change is required."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEPinStateError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_needs_self_test(self, json_response):
+        """The TSE needs self test."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSENeedsSelfTestError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_pin_blocked(self, json_response):
+        """The PIN is blocked."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_AUTHENTICATION_PIN_BLOCKED'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEAuthenticationError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_wrong_puk(self, json_response):
+        """The PUK is wrong."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_AUTHENTICATION_FAILED'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEAuthenticationError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_certificate_expired(self, json_response):
+        """The certificate is expired."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_CERTIFICATE_EXPIRED'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSECertificateExpiredError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_same_pin(self, json_response):
+        """The PIN is same as before."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'TSE1_ERROR_TSE_INVALID_PARAMETER'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEPinError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_execution_ok(self, json_response):
+        """All PIN was set successful."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'EXECUTION_OK'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+    def test_unexpected_error(self, json_response):
+        """An unexpected error occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response_ok = json_response.copy()
+            json_response_change_pin = json_response.copy()
+            json_response_ok['result'] = 'EXECUTION_OK'
+            json_response_change_pin['result'] = \
+                'UNEXPECTED ERROR'
+
+            with patch('tse.epson.TSE._get_challenge', return_value='123'):
+                with patch(
+                        'tse.epson._TSEHost.tse_send',
+                        side_effect=[
+                            json_response_ok,
+                            json_response_change_pin,
+                            json_response_ok]):
+                    tse = TSE('TSE_ID', '')
+
+                    with pytest.raises(tse_ex.TSEError):
+                        tse.change_pin(TSERole.ADMIN, '123456', '12345')
+
+
 class TestRegisterClient:
     """Tests for the register_client method of TSE class."""
 
@@ -1296,28 +1488,30 @@ class TestTSEDisableSecureElement:
                 with pytest.raises(tse_ex.TSEError):
                     tse.disable_secure_element()
 
-    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-        # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
-        date_time = datetime(2022, 8, 11, 23, 59, 59)
-
-        tse = TSE(epson_tse_id, epson_tse_host_ip)
-        tse.open()
-
-        try:
-            # tse.factory_reset()
-            # tse.run_self_test()
-            # tse.register_secret('EPSONKEY')
-            # print(tse._get_challenge())
-            # tse.initialize('123456', '12345', '54321')
-            tse.login_user('Administrator', TSERole.ADMIN, '12345')
-            # tse.logout_user('Administrator', TSERole.ADMIN)
-            # tse.register_client('test')
-            # tse.deregister_client('test')
-            # print(tse.client_list())
-            # tse.update_time('Administrator', date_time)
-            # tse.lock(False)
-            # print(tse.info)
-            # print(tse.disable_secure_element())
-        except Exception as e:
-            print(e)
-        tse.close()
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
+    #     date_time = datetime(2022, 8, 11, 23, 59, 59)
+    #
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         # tse.factory_reset()
+    #         # tse.run_self_test()
+    #         # tse.register_secret('EPSONKEY')
+    #         # print(tse._get_challenge())
+    #         # tse.initialize('123456', '12345', '54321')
+    #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+    #         # tse.logout_user('Administrator', TSERole.TIME_ADMIN)
+    #         # tse.register_client('test')
+    #         # tse.deregister_client('test')
+    #         tse.change_pin(TSERole.ADMIN, '123456', '12345')
+    #         # print(tse.client_list())
+    #         # tse.update_time('Administrator', date_time)
+    #         # tse.lock(False)
+    #         # print(tse.info)
+    #         # print(tse.disable_secure_element())
+    #     except Exception as e:
+    #         print(e)
+    #     tse.close()
+    #
