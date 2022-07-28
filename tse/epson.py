@@ -478,7 +478,7 @@ class TSE():
 
         return info
 
-    def _get_challenge(self) -> str:
+    def _get_challenge(self, user_id) -> str:
         """
         Get challenge data.
 
@@ -503,7 +503,7 @@ class TSE():
             },
             'function': 'GetChallenge',
             'input': {
-                'userId': 'Administrator'
+                'userId': user_id
             },
             'compress': {
                 'required': False,
@@ -561,7 +561,8 @@ class TSE():
         self._tse_host.tse_close(self._tse_id)
 
     def initialize(
-            self, puk: str,
+            self,
+            puk: str,
             admin_pin: str,
             time_admin_pin: str
             ) -> None:
@@ -691,19 +692,17 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        challenge = self._get_challenge()
+        challenge = self._get_challenge(user_id)
 
         hash = _hash(challenge, self._secret)
 
         if role == TSERole.ADMIN:
-            login_function = 'AuthenticateUserForAdmin'
-
             data = {
                 'storage': {
                     'type': 'TSE',
                     'vendor': 'TSE1'
                 },
-                'function': login_function,
+                'function': 'AuthenticateUserForAdmin',
                 'input': {
                     'userId': user_id,
                     'pin': pin,
@@ -715,14 +714,14 @@ class TSE():
                 }
             }
         else:
-            login_function = 'AuthenticateUserForTimeAdmin'
-
+            print('#######################')
+            print(hash.decode())
             data = {
                 'storage': {
                     'type': 'TSE',
                     'vendor': 'TSE1'
                 },
-                'function': login_function,
+                'function': 'AuthenticateUserForTimeAdmin',
                 'input': {
                     'clientId': user_id,
                     'pin': pin,
@@ -927,7 +926,7 @@ class TSE():
         elif role == TSERole.TIME_ADMIN:
             function = 'UnblockUserForTimeAdmin'
 
-        challenge = self._get_challenge()
+        challenge = self._get_challenge('Administrator')
         hash = _hash(challenge, self._secret)
 
         data = {
