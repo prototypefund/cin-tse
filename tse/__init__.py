@@ -90,5 +90,24 @@ class TSEInfo:
     """The TSE's software version"""
 
 
+@dataclass(frozen=True)
+class TSETransaction:
+    """This class represents a TSE transaction with all related properties."""
+    transaction_number: int
+    """The transaction number."""
+
+    log_time: datetime
+    """Date and time that the log was created."""
+
+    serial_number: str
+    """The serial number of the TSE."""
+
+    signature: str
+    """The signature value."""
+
+    signature_counter: int
+    """The current signature counter."""
+
+
 class TSE(Protocol):
     """The TSE protocol definition."""
