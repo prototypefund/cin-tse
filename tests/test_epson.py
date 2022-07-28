@@ -428,7 +428,7 @@ class TestGetChallenge:
                 tse = TSE('TSE_ID', '10.0.0.2')
 
                 with pytest.raises(tse_ex.TSEError):
-                    tse._get_challenge()
+                    tse._get_challenge('Administrator')
 
     def test_execution_ok(self, connect_response, json_response):
         """The Execution was OK."""
@@ -445,7 +445,7 @@ class TestGetChallenge:
 
                 tse = TSE('TSE_ID', '10.0.0.2')
 
-                assert tse._get_challenge() == 'JSUJEEKSK6789'
+                assert tse._get_challenge('Administrator') == 'JSUJEEKSK6789'
 
 
 class TestTSEInitialize:
@@ -1488,10 +1488,64 @@ class TestTSEDisableSecureElement:
                 with pytest.raises(tse_ex.TSEError):
                     tse.disable_secure_element()
 
+
+class TestStartTransaction:
+    """Tests for te start_transaction method of the TSE class."""
+
+    def test_unauthenticated_user(self, json_response):
+        """No time admin logged in."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                    'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
+                    tse.start_transaction('pos123', 'data', 'type')
+
+    def test_certificate_expired(self, json_response):
+        """The certificate is expired."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                    'TSE1_ERROR_CERTIFICATE_EXPIRED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSECertificateExpiredError):
+                    tse.start_transaction('pos123', 'data', 'type')
+
+    def test_time_not_set(self, json_response):
+        """The time was not set."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                    'TSE1_ERROR_NO_TIME_SET'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSETimeNotSetError):
+                    tse.start_transaction('pos123', 'data', 'type')
+
+    def test_unexpected_error(self, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.start_transaction('pos123', 'data', 'type')
+
     # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-    #     # date_time = datetime(2022, 8, 11, 23, 59, 59, tzinfo=timezone.utc)
-    #     date_time = datetime(2022, 8, 11, 23, 59, 59)
-    #
+    #     date_time = datetime(2022, 7, 11, 23, 59, 59)
+    # #
     #     tse = TSE(epson_tse_id, epson_tse_host_ip)
     #     tse.open()
     #
@@ -1502,16 +1556,24 @@ class TestTSEDisableSecureElement:
     #         # print(tse._get_challenge())
     #         # tse.initialize('123456', '12345', '54321')
     #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
-    #         # tse.logout_user('Administrator', TSERole.TIME_ADMIN)
-    #         # tse.register_client('test')
+    #         # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
+    #         # tse.logout_user('pos123', TSERole.TIME_ADMIN)
+    #         # tse.register_client('pos123')
     #         # tse.deregister_client('test')
-    #         tse.change_pin(TSERole.ADMIN, '123456', '12345')
+    #         # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
     #         # print(tse.client_list())
-    #         # tse.update_time('Administrator', date_time)
+    #         transaction = tse.start_transaction('pos123', 'data', 'type')
+    #
+    #         print(transaction.transaction_number)
+    #         print(transaction.log_time)
+    #         print(transaction.serial_number)
+    #         print(transaction.signature)
+    #         print(transaction.signature_counter)
+    #
+    #         # tse.update_time('pos123', date_time)
     #         # tse.lock(False)
     #         # print(tse.info)
     #         # print(tse.disable_secure_element())
     #     except Exception as e:
     #         print(e)
     #     tse.close()
-    #
