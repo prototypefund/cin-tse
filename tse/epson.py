@@ -12,7 +12,7 @@ from datetime import datetime
 from xml.etree import ElementTree
 from typing import Optional, List
 from tse import exceptions as tse_ex
-from tse import TSEInfo, TSEState, TSERole
+from tse import TSEInfo, TSEState, TSERole, TSETransaction
 
 
 def _hash(challenge: str, secret: str) -> bytes:
@@ -714,8 +714,6 @@ class TSE():
                 }
             }
         else:
-            print('#######################')
-            print(hash.decode())
             data = {
                 'storage': {
                     'type': 'TSE',
@@ -1611,7 +1609,7 @@ class TSE():
             self._tse_id, data, timeout=120)
 
         code = result['result']
-
+        # todo: TSE1_ERROR_TSE_HAS_UNFINISHED_TRANSACTIONS
         match code:
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
@@ -1628,6 +1626,78 @@ class TSE():
                     'The TSE time is not set.')
             case 'EXECUTION_OK':
                 return None
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
+
+    def start_transaction(
+            self,
+            user_id: str,
+            data: str,
+            type: str) -> TSETransaction:
+        """
+        Start a new transaction.
+
+        **Role: TSERole.TIME_ADMIN**
+
+        Raises:
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
+            tse.exceptions.TSECertificateExpiredError: If the certificate of
+                the TSE is expired.
+            tse.exceptions.TSETimeNotSetError: If the TSE time is not set.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'StartTransaction',
+            'input': {
+                'clientId': user_id,
+                'processData': data,
+                'processType': type,
+                'additionalData': ''
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.TIME_ADMIN role.')
+            case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                raise tse_ex.TSECertificateExpiredError(
+                    f'The certificate of the TSE {self._tse_id} is expired. '
+                    'Either the validity of the certificate has expired or '
+                    'the TSE was decommissioned.')
+            case 'TSE1_ERROR_NO_TIME_SET':
+                raise tse_ex.TSETimeNotSetError(
+                    'The TSE time is not set.')
+            case 'EXECUTION_OK':
+                data = result['output']
+
+                return TSETransaction(
+                    transaction_number=data['transactionNumber'],
+                    log_time=data['logTime'],
+                    serial_number=data['serialNumber'],
+                    signature=data['signature'],
+                    signature_counter=data['signatureCounter'])
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
