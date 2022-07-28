@@ -1476,6 +1476,19 @@ class TestTSEDisableSecureElement:
                 with pytest.raises(tse_ex.TSETimeNotSetError):
                     tse.disable_secure_element()
 
+    def test_unfinished_transactions(self, json_response):
+        """There are unfinished tranactions."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'TSE1_ERROR_TSE_HAS_UNFINISHED_TRANSACTIONS'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEUnfinishedTransactionError):
+                    tse.disable_secure_element()
+
     def test_unexpected_error(self, json_response):
         """A TSEError occurred."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):

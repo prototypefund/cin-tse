@@ -1609,7 +1609,7 @@ class TSE():
             self._tse_id, data, timeout=120)
 
         code = result['result']
-        # todo: TSE1_ERROR_TSE_HAS_UNFINISHED_TRANSACTIONS
+
         match code:
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
@@ -1621,6 +1621,9 @@ class TSE():
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
                     'No user logged in with TSERole.ADMIN role.')
+            case 'TSE1_ERROR_TSE_HAS_UNFINISHED_TRANSACTIONS':
+                raise tse_ex.TSEUnfinishedTransactionError(
+                    'There are still unfinished transactions.')
             case 'TSE1_ERROR_NO_TIME_SET':
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
