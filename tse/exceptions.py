@@ -95,3 +95,7 @@ class TSEPinStateError(TSEError):
 
 class TSEPinError(TSEError):
     """Raised if an error with PIN occurs."""
+
+
+class TSEUnfinishedTransactionError(TSEError):
+    """Raised if a transaction is unfinished."""
