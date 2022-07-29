@@ -91,22 +91,37 @@ class TSEInfo:
 
 
 @dataclass(frozen=True)
+class TSESignature:
+    """The TSE signature representing class."""
+
+    time: datetime
+    """The date and time where the signature was created."""
+
+    value: str
+    """The value of the signature."""
+
+    counter: int
+    """The signature counter."""
+
+
+@dataclass()
 class TSETransaction:
     """This class represents a TSE transaction with all related properties."""
-    transaction_number: int
-    """The transaction number."""
 
-    log_time: datetime
-    """Date and time that the log was created."""
+    number: int
+    """The transaction number."""
 
     serial_number: str
     """The serial number of the TSE."""
 
-    signature: str
-    """The signature value."""
+    start_signature: TSESignature = None
+    """The start signature of the transaction."""
 
-    signature_counter: int
-    """The current signature counter."""
+    update_signature: TSESignature = None
+    """The signature of ther last transaction update."""
+
+    finish_signature: str = None
+    """The finish signature of the transaction."""
 
 
 class TSE(Protocol):
