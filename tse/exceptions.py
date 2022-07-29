@@ -33,8 +33,12 @@ class TSETimeNotSetError(TSEError):
     """Raised if the TSE time is not set."""
 
 
+class TSENotInitializedError(TSEError):
+    """Raised if a TSE is not initialized."""
+
+
 class TSEAlreadyInitializedError(TSEError):
-    """Raised if a TSE are already initialized."""
+    """Raised if a TSE is already initialized."""
 
 
 class TSESelfTestError(TSEError):
