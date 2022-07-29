@@ -1505,6 +1505,40 @@ class TestTSEDisableSecureElement:
 class TestStartTransaction:
     """Tests for te start_transaction method of the TSE class."""
 
+    def test_execution_ok(self, connect_response, json_response):
+        """The Execution was OK."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+            json_response['output'] = {
+                    'logTime': '2022-07-11T23:59:59Z',
+                    'serialNumber': '/dpW2qCff6wSXlj0WUXR5Kye2' +
+                    'RM/dcMQlTtjK0K7ulY=',
+                    'signature':
+                    'fXk08EhlHB6EUST/qrKZglzZ+Yzmm2/Y7nlp/w2tm' +
+                    '4I0rJlRzs7nwJVnr7yijatdTML5PTLLUzPjsMNAYHiGfuF' +
+                    '7qBt+MII1/HUTQnnH7JeM5Qe1NduQeiRv2yI66Xrf',
+                    'signatureCounter': 424,
+                    'transactionNumber': 3
+                    }
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                transaction = tse.start_transaction('pos123', 'data', 'type')
+
+                assert transaction.number == 3
+                assert transaction.serial_number == \
+                    '/dpW2qCff6wSXlj0WUXR5Kye2RM/dcMQlTtjK0K7ulY='
+                assert transaction.start_signature.time == \
+                    datetime(2022, 7, 11, 23, 59, 59, tzinfo=timezone.utc)
+                assert transaction.start_signature.value == \
+                    'fXk08EhlHB6EUST/qrKZglzZ+Yzmm2/Y7nlp/w2tm' \
+                    '4I0rJlRzs7nwJVnr7yijatdTML5PTLLUzPjsMNAYHiGfuF' \
+                    '7qBt+MII1/HUTQnnH7JeM5Qe1NduQeiRv2yI66Xrf'
+                assert transaction.start_signature.counter == 424
+
     def test_unauthenticated_user(self, json_response):
         """No time admin logged in."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
@@ -1569,21 +1603,21 @@ class TestStartTransaction:
     #         # print(tse._get_challenge())
     #         # tse.initialize('123456', '12345', '54321')
     #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
-    #         # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
+    #         tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
     #         # tse.logout_user('pos123', TSERole.TIME_ADMIN)
     #         # tse.register_client('pos123')
     #         # tse.deregister_client('test')
     #         # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
     #         # print(tse.client_list())
+    #         tse.update_time('pos123', date_time)
     #         transaction = tse.start_transaction('pos123', 'data', 'type')
     #
-    #         print(transaction.transaction_number)
-    #         print(transaction.log_time)
-    #         print(transaction.serial_number)
-    #         print(transaction.signature)
-    #         print(transaction.signature_counter)
-    #
-    #         # tse.update_time('pos123', date_time)
+    #         print(transaction)
+    #         # print(transaction.log_time)
+    #         # print(transaction.serial_number)
+    #         # print(transaction.signature)
+    #         # print(transaction.signature_counter)
+    #         #
     #         # tse.lock(False)
     #         # print(tse.info)
     #         # print(tse.disable_secure_element())
