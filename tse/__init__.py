@@ -69,11 +69,11 @@ class TSEInfo:
     max_signatures: int
     """Remaining amount of signatures."""
 
-    registered_clients: int
-    """The number of currently registered clients."""
+    registered_users: int
+    """The number of currently registered users."""
 
-    max_registered_clients: int
-    """Maximum number of clients that can be registered."""
+    max_registered_users: int
+    """Maximum number of users that can be registered."""
 
     max_started_transactions: int
     """

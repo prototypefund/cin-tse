@@ -385,8 +385,8 @@ class TestTSEInfo:
         assert tse_info.signature_counter == 0
         assert tse_info.remaining_signatures == 20000000
         assert tse_info.max_signatures == 20000000
-        assert tse_info.registered_clients == 0
-        assert tse_info.max_registered_clients == 100
+        assert tse_info.registered_users == 0
+        assert tse_info.max_registered_users == 100
         assert tse_info.max_started_transactions == 512
         assert tse_info.tar_export_size == 0
         assert tse_info.needs_self_test
@@ -987,11 +987,11 @@ class TestChangePin:
                         tse.change_pin(TSERole.ADMIN, '123456', '12345')
 
 
-class TestRegisterClient:
-    """Tests for the register_client method of TSE class."""
+class TestRegisterUser:
+    """Tests for the register_user method of TSE class."""
 
-    def test_client_registered(self, json_response):
-        """The client was registered."""
+    def test_user_registered(self, json_response):
+        """The user was registered."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'EXECUTION_OK'
 
@@ -999,7 +999,7 @@ class TestRegisterClient:
                     'tse.epson._TSEHost.tse_send', return_value=json_response):
                 tse = TSE('TSE_ID', '')
 
-                assert not tse.register_client('POS1')
+                assert not tse.register_user('POS1')
 
     def test_no_admin_user_logged_in(self, json_response):
         """There is no logged in Admin user."""
@@ -1011,10 +1011,10 @@ class TestRegisterClient:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
-                    tse.register_client('POS1')
+                    tse.register_user('POS1')
 
     def test_max_length_error(self, json_response):
-        """Client ID too long."""
+        """User ID too long."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'JSON_ERROR_INVALID_PARAMETER_RANGE'
 
@@ -1023,7 +1023,7 @@ class TestRegisterClient:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(ValueError):
-                    tse.register_client(31*'x')
+                    tse.register_user(31*'x')
 
     def test_unexpected_error(self, connect_response, json_response):
         """A TSEError occurred."""
@@ -1039,14 +1039,14 @@ class TestRegisterClient:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSEError):
-                        tse.register_client('xyz')
+                        tse.register_user('xyz')
 
 
-class TestDeregisterClient:
-    """Tests for the deregister_client method of TSE class."""
+class TestDeregisterUser:
+    """Tests for the deregister_user method of TSE class."""
 
-    def test_client_registered(self, json_response):
-        """The client was registered."""
+    def test_user_registered(self, json_response):
+        """The user was registered."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'EXECUTION_OK'
 
@@ -1054,7 +1054,7 @@ class TestDeregisterClient:
                     'tse.epson._TSEHost.tse_send', return_value=json_response):
                 tse = TSE('TSE_ID', '')
 
-                assert not tse.deregister_client('POS1')
+                assert not tse.deregister_user('POS1')
 
     def test_no_admin_user_logged_in(self, json_response):
         """There is no logged in Admin user."""
@@ -1066,10 +1066,10 @@ class TestDeregisterClient:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
-                    tse.deregister_client('POS1')
+                    tse.deregister_user('POS1')
 
     def test_max_length_error(self, json_response):
-        """Client ID too long."""
+        """User ID too long."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'JSON_ERROR_INVALID_PARAMETER_RANGE'
 
@@ -1078,10 +1078,10 @@ class TestDeregisterClient:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(ValueError):
-                    tse.deregister_client(31*'x')
+                    tse.deregister_user(31*'x')
 
-    def test_client_not_exist(self, json_response):
-        """Client ID not exist."""
+    def test_user_not_exist(self, json_response):
+        """User ID not exist."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'TSE1_ERROR_CLIENT_NOT_REGISTERED'
 
@@ -1090,7 +1090,7 @@ class TestDeregisterClient:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(tse_ex.TSEClientNotExistError):
-                    tse.deregister_client(31*'x')
+                    tse.deregister_user(31*'x')
 
     def test_unexpected_error(self, connect_response, json_response):
         """A TSEError occurred."""
@@ -1106,14 +1106,14 @@ class TestDeregisterClient:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSEError):
-                        tse.deregister_client('xyz')
+                        tse.deregister_user('xyz')
 
 
-class TestTSEClientList:
-    """Tests for the client_list method of the TSE class."""
+class TestTSEUserList:
+    """Tests for the user_list method of the TSE class."""
 
-    def test_all_clients_returned(self, json_response):
-        """All clients returend successful."""
+    def test_all_users_returned(self, json_response):
+        """All users returend successful."""
         with patch('tse.epson._TSEHost.__init__', return_value=None):
             json_response['result'] = 'EXECUTION_OK'
             json_response['output'] = {
@@ -1123,7 +1123,7 @@ class TestTSEClientList:
                     'tse.epson._TSEHost.tse_send', return_value=json_response):
                 tse = TSE('TSE_ID', '')
 
-                assert tse.client_list() == ['POS1', 'POS2']
+                assert tse.user_list() == ['POS1', 'POS2']
 
     def test_no_admin_user_logged_in(self, json_response):
         """There is no logged in Admin user."""
@@ -1135,7 +1135,7 @@ class TestTSEClientList:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
-                    tse.client_list()
+                    tse.user_list()
 
     def test_unexpected_error(self, connect_response, json_response):
         """A TSEError occurred."""
@@ -1151,7 +1151,7 @@ class TestTSEClientList:
                     tse = TSE('TSE_ID', '')
 
                     with pytest.raises(tse_ex.TSEError):
-                        tse.client_list()
+                        tse.user_list()
 
 
 class TestTSERunSelfTest:
@@ -1174,8 +1174,8 @@ class TestTSERunSelfTest:
 
                 assert not tse.run_self_test()
 
-    def test_client_not_registered(self, connect_response, json_response):
-        """The Execution was OK if client not registered."""
+    def test_not_initialized(self, connect_response, json_response):
+        """The TSE is not initialized."""
         with patch('tse.epson.socket.socket') as socket_mock:
             socket_mock.return_value.recv.side_effect = [
                 connect_response,

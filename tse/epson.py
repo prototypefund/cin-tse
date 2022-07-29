@@ -8,7 +8,6 @@ import json
 from datetime import datetime
 from hashlib import sha256
 from base64 import b64encode
-from datetime import datetime
 from xml.etree import ElementTree
 from typing import Optional, List
 from tse import exceptions as tse_ex
@@ -467,8 +466,8 @@ class TSE():
             signature_counter=tse_info['createdSignatures'],
             remaining_signatures=tse_info['remainingSignatures'],
             max_signatures=tse_info['maxSignatures'],
-            registered_clients=tse_info['registeredClients'],
-            max_registered_clients=tse_info['maxRegisteredClients'],
+            registered_users=tse_info['registeredClients'],
+            max_registered_users=tse_info['maxRegisteredClients'],
             serial_number=tse_info['serialNumber'],
             max_started_transactions=tse_info['maxStartedTransactions'],
             tar_export_size=tse_info['tarExportSize'],
@@ -670,7 +669,7 @@ class TSE():
 
         Args:
             user_id: The user ID. For Admin role only the "Administrator" user
-                is allowed. For TimeAdmin all client IDs are allowed.
+                is allowed. For TimeAdmin all user IDs are allowed.
             role: A TSERole.
             pin: The PIN for the role.
 
@@ -782,7 +781,7 @@ class TSE():
 
         Args:
             user_id: The user ID. For Admin role only the "Administrator" user
-                is allowed. For TimeAdmin all client IDs are allowed.
+                is allowed. For TimeAdmin all user IDs are allowed.
             role: A TSERole.
 
         Raises:
@@ -1043,19 +1042,19 @@ class TSE():
         if error:
             raise error
 
-    def register_client(self, client_id: str) -> None:
+    def register_user(self, user_id: str) -> None:
         """
-        Registers client ID to be used in the TSE.
+        Registers user ID to be used in the TSE.
 
         The maximum length of the ID is 30 characters.
 
         **Role: TSERole.ADMIN**
 
         Args:
-            client_id: The ID of the client (maximum length: 30 characters)
+            user_id: The ID of the user (maximum length: 30 characters)
 
         Raises:
-            ValueError: If maximum length of client ID is greater than
+            ValueError: If maximum length of user ID is greater than
                 30 characters.
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
@@ -1080,7 +1079,7 @@ class TSE():
             },
             'function': 'RegisterClient',
             'input': {
-                'clientId': client_id,
+                'clientId': user_id,
             },
             'compress': {
                 'required': False,
@@ -1110,7 +1109,7 @@ class TSE():
                 )
             case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
                 raise ValueError(
-                    'Maximum length of client ID is 30 characters.'
+                    'Maximum length of user ID is 30 characters.'
                 )
             case 'EXECUTION_OK':
                 return None
@@ -1119,9 +1118,9 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.'
                 )
 
-    def deregister_client(self, client_id: str) -> None:
+    def deregister_user(self, user_id: str) -> None:
         """
-        Deregisters a client.
+        Deregisters a user.
 
         The maximum length of the ID is 30 characters. IDs including "EPSON"
         are reserved by the TSE host, deleting by the user is prohibited.
@@ -1129,12 +1128,12 @@ class TSE():
         **Role: TSERole.ADMIN**
 
         Args:
-            client_id: The ID of the client (maximum length: 30 characters)
+            user_id: The ID of the user (maximum length: 30 characters)
 
         Raises:
-            ValueError: If maximum length of client ID is greater than
+            ValueError: If maximum length of user ID is greater than
                 30 characters.
-            tse.exceptions.TSEClientNotExistError: If the client does
+            tse.exceptions.TSEClientNotExistError: If the user does
                 not exist.
             tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
                 as TSERole.ADMIN.
@@ -1159,7 +1158,7 @@ class TSE():
             },
             'function': 'DeregisterClient',
             'input': {
-                'clientId': client_id,
+                'clientId': user_id,
             },
             'compress': {
                 'required': False,
@@ -1185,7 +1184,7 @@ class TSE():
                     'be restarted.')
             case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
                 raise tse_ex.TSEClientNotExistError(
-                    f'The client {client_id} does not exist.'
+                    f'The user {user_id} does not exist.'
                 )
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
@@ -1193,7 +1192,7 @@ class TSE():
                 )
             case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
                 raise ValueError(
-                    'Maximum length of client ID is 30 characters.'
+                    'Maximum length of user ID is 30 characters.'
                 )
             case 'EXECUTION_OK':
                 return None
@@ -1202,12 +1201,12 @@ class TSE():
                     f'Unexpected TSE error occures: {result}.'
                 )
 
-    def client_list(self) -> List[str]:
+    def user_list(self) -> List[str]:
         """
-        List all client IDs of registered clients.
+        List all IDs of registered users.
 
-        Although the client ID "EPSONXXXXXXXX" is included. It is
-        an internal client ID and not a Point of Sale.
+        Although the user ID "EPSONXXXXXXXX" is included. It is
+        an internal user ID and not a Point of Sale.
 
         **Role: TSERole.ADMIN**
 
@@ -1436,7 +1435,7 @@ class TSE():
 
         Args:
             user_id: The user who wants to set the time. This can be a
-                registered client or the Administrator user. The user must
+                registered user or the Administrator user. The user must
                 be logged in with at least the TSERole.TIME_ADMIN role.
             time: The time as datetime type.
 
