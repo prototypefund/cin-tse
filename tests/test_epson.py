@@ -1189,7 +1189,8 @@ class TestTSERunSelfTest:
 
                 tse = TSE('TSE_ID', '')
 
-                assert not tse.run_self_test()
+                with pytest.raises(tse_ex.TSENotInitializedError):
+                    tse.run_self_test()
 
     def test_self_test_error(self, connect_response, json_response):
         """A TSESelfTestError occurred."""

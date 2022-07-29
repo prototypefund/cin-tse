@@ -1277,6 +1277,8 @@ class TSE():
         **Role: None**
 
         Raises:
+            tse.exceptions.TSENotInitializedError: If the TSE is not
+                initialized.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
@@ -1303,7 +1305,10 @@ class TSE():
         code = result['result']
 
         match code:
-            case 'EXECUTION_OK' | 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
+            case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
+                raise tse_ex.TSENotInitializedError(
+                    'The TSE is not initialized.')
+            case 'EXECUTION_OK':
                 return None
             case _:
                 raise tse_ex.TSESelfTestError(
