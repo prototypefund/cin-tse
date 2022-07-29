@@ -93,20 +93,17 @@ class _TSEHost:
         except socket.gaierror:
             raise tse_ex.ConnectionHostnameError(
                 f'The connection to the host "{host}" could not '
-                'be established. The hostname has no valid format.'
-            )
+                'be established. The hostname has no valid format.')
 
         except socket.timeout:
             raise tse_ex.ConnectionTimeoutError(
                 f'The connection to the host "{host}" could not'
-                'be established. A timeout error occurs.'
-            )
+                'be established. A timeout error occurs.')
 
         except Exception as ex:
             raise tse_ex.ConnectionError(
                 f'The connection to the host "{host}" could not '
-                f'be established ({str(ex)}).'
-            )
+                f'be established ({str(ex)}).')
 
     def __del__(self) -> None:
         """
@@ -179,14 +176,12 @@ class _TSEHost:
         except socket.timeout:
             raise tse_ex.ConnectionTimeoutError(
                 'The data could not be sent to the TSE host. '
-                'Timeout error occurs.'
-            )
+                'Timeout error occurs.')
 
         except (OSError, AttributeError):
             raise tse_ex.ConnectionError(
                 'There is no established host connection. '
-                'Please connect again.'
-            )
+                'Please connect again.')
 
     def tse_open(self, tse_id: str) -> None:
         """
@@ -219,18 +214,15 @@ class _TSEHost:
         match code:
             case 'DEVICE_IN_USE':
                 raise tse_ex.TSEInUseError(
-                    f'The TSE {tse_id} is in use.'
-                )
+                    f'The TSE {tse_id} is in use.')
             case 'DEVICE_OPEN_ERROR' | 'DEVICE_NOT_FOUND':
                 raise tse_ex.TSEOpenError(
-                    'The TSE {tse_id} could not be opened.'
-                )
+                    'The TSE {tse_id} could not be opened.')
             case 'OK':
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    f'An unexpected TSE error occurred: {code}.'
-                )
+                    f'An unexpected TSE error occurred: {code}.')
 
     def tse_send(self, tse_id: str, data: dict, timeout: int = 3) -> dict:
         """
@@ -277,25 +269,20 @@ class _TSEHost:
                 case 'ERROR_TIMEOUT':
                     raise tse_ex.TSETimeoutError(
                         'A timeout error occurred while sending data to '
-                        'the TSE'
-                    )
+                        'the TSE')
                 case 'ERROR_DEVICE_BUSY':
                     raise tse_ex.TSEInUseError(
-                        'The TSE is in use.'
-                    )
+                        'The TSE is in use.')
                 case 'DEVICE_NOT_OPEN':
                     raise tse_ex.TSEOpenError(
-                        'The TSE device is not open.'
-                    )
+                        'The TSE device is not open.')
                 case 'SUCCESS':
                     if isinstance(result_element, ElementTree.Element) \
                             and isinstance(result_element.text, str):
                         return json.loads(result_element.text)
-
                 case _:
                     raise tse_ex.TSEError(
-                        f'Unexpected TSE error occures: {code}.'
-                    )
+                        f'Unexpected TSE error occures: {code}.')
 
         return {}
 
@@ -327,18 +314,15 @@ class _TSEHost:
         match code:
             case 'DEVICE_IN_USE':
                 raise tse_ex.TSEInUseError(
-                    'The TSE {tse_id} is in use.'
-                )
+                    'The TSE {tse_id} is in use.')
             case 'DEVICE_NOT_OPEN':
                 raise tse_ex.TSEOpenError(
-                    'The TSE {tse_id} is not open.'
-                )
+                    'The TSE {tse_id} is not open.')
             case 'OK':
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
 
 class TSE():
@@ -435,8 +419,7 @@ class TSE():
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
         tse_info = result['output']['tseInformation']
         state_data = tse_info['tseInitializationState']
@@ -520,8 +503,7 @@ class TSE():
                 pass
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
         return result['output']['challenge']
 
@@ -601,8 +583,7 @@ class TSE():
             raise ValueError('The Admin PIN is to long (maximum 5 character)')
         elif len(time_admin_pin) > 5:
             raise ValueError(
-                'The Time Admin PIN is to long (maximum 5 character)'
-            )
+                'The Time Admin PIN is to long (maximum 5 character)')
 
         data = {
             'storage': {
@@ -629,8 +610,7 @@ class TSE():
         match code:
             case 'OTHER_ERROR_TSE_ALREADY_SET_UP':
                 raise tse_ex.TSEAlreadyInitializedError(
-                    f'The TSE {self._tse_id} was already initialized.'
-                )
+                    f'The TSE {self._tse_id} was already initialized.')
             case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
                 raise tse_ex.TSECertificateExpiredError(
                     f'The certificate of the TSE {self._tse_id} is expired. '
@@ -638,14 +618,12 @@ class TSE():
                     'the TSE was decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'EXECUTION_OK':
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def login_user(
             self,
@@ -738,36 +716,32 @@ class TSE():
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
                 raise tse_ex.TSEPukStateError(
-                    'The PUK change required. Maybe the TSE is not initialized'
-                )
+                    'The PUK change required. Maybe the TSE is'
+                    'not initialized')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
                 raise tse_ex.TSEPinStateError(
-                    'The PIN change required. Maybe the TSE is not initialized'
-                )
+                    'The PIN change required. Maybe the TSE is'
+                    'not initialized')
             case 'OTHER_ERROR_INVALID_ADMIN_USER_ID':
                 raise tse_ex.TSELoginError(
                     'Only the "Administrator" user can be logged in '
-                    'with TSERole.ADMIN role.'
-                )
+                    'with TSERole.ADMIN role.')
             case 'TSE1_ERROR_AUTHENTICATION_FAILED':
                 remaining_retries = result['output']['remainingRetries']
 
                 raise tse_ex.TSELoginError(
                         f'The user {user_id} could not login as {role} role '
-                        f'(remaining retries: {remaining_retries}).'
-                )
+                        f'(remaining retries: {remaining_retries}).')
             case 'TSE1_ERROR_AUTHENTICATION_PIN_BLOCKED':
                 raise tse_ex.TSEPinBlockedError(
-                    f'The PIN for {role} was blocked.'
-                )
+                    f'The PIN for {role} was blocked.')
             case 'OTHER_ERROR_HOST_AUTHENTICATION_FAILED':
                 raise tse_ex.TSESecretError('Wrong authentication secret.')
             case 'EXECUTION_OK':
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def logout_user(
             self,
@@ -849,29 +823,24 @@ class TSE():
                     'the TSE was decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSELogoutError(
                     f'The user {user_id} not logged in with '
-                    'TSERole.ADMIN role.'
-                )
+                    'TSERole.ADMIN role.')
             case 'TSE1_ERROR_AUTHENTICATION_USER_NOT_LOGGED_IN':
                 raise tse_ex.TSELogoutError(
                     'The Given user is not authenticated. Maybe the TSE is '
-                    'decommissioned.'
-                )
+                    'decommissioned.')
             case 'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER':
                 raise tse_ex.TSELogoutError(
                     f'The user {user_id} not logged in with '
-                    'TSERole.TIME_ADMIN role.'
-                )
+                    'TSERole.TIME_ADMIN role.')
             case 'EXECUTION_OK':
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def change_pin(self, role: TSERole, puk: str, new_pin: str) -> None:
         """
@@ -1095,8 +1064,7 @@ class TSE():
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'The internal TSE error occures if the TSE is '
@@ -1105,18 +1073,15 @@ class TSE():
                     'be restarted.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
-                    'No user logged in with TSERole.ADMIN role.'
-                )
+                    'No user logged in with TSERole.ADMIN role.')
             case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
                 raise ValueError(
-                    'Maximum length of user ID is 30 characters.'
-                )
+                    'Maximum length of user ID is 30 characters.')
             case 'EXECUTION_OK':
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def deregister_user(self, user_id: str) -> None:
         """
@@ -1174,8 +1139,7 @@ class TSE():
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'The internal TSE error occures if the TSE is '
@@ -1184,22 +1148,18 @@ class TSE():
                     'be restarted.')
             case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
                 raise tse_ex.TSEClientNotExistError(
-                    f'The user {user_id} does not exist.'
-                )
+                    f'The user {user_id} does not exist.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
-                    'No user logged in with TSERole.ADMIN role.'
-                )
+                    'No user logged in with TSERole.ADMIN role.')
             case 'JSON_ERROR_INVALID_PARAMETER_RANGE':
                 raise ValueError(
-                    'Maximum length of user ID is 30 characters.'
-                )
+                    'Maximum length of user ID is 30 characters.')
             case 'EXECUTION_OK':
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {result}.'
-                )
+                    f'Unexpected TSE error occures: {result}.')
 
     def user_list(self) -> List[str]:
         """
@@ -1248,8 +1208,7 @@ class TSE():
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'The internal TSE error occures if the TSE is '
@@ -1260,12 +1219,10 @@ class TSE():
                 return result['output']['registeredClientIdList']
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
-                    'No user logged in with TSERole.ADMIN role.'
-                )
+                    'No user logged in with TSERole.ADMIN role.')
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def run_self_test(self) -> None:
         """
@@ -1358,8 +1315,7 @@ class TSE():
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def register_secret(self, secret: str) -> None:
         """
@@ -1407,8 +1363,7 @@ class TSE():
         match code:
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
-                    'No user logged in with TSERole.ADMIN role.'
-                )
+                    'No user logged in with TSERole.ADMIN role.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1421,8 +1376,7 @@ class TSE():
                 return None
             case _:
                 raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.'
-                )
+                    f'Unexpected TSE error occures: {code}.')
 
     def update_time(self, user_id: str, time: datetime) -> None:
         """
@@ -1483,8 +1437,7 @@ class TSE():
                     'The TSE is decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1553,8 +1506,7 @@ class TSE():
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'The internal TSE error occures if the TSE is '
@@ -1940,8 +1892,7 @@ class TSE():
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
                     'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
                 raise tse_ex.TSENeedsSelfTestError(
-                    f'The TSE {self._tse_id} needs a self test.'
-                )
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'EXECUTION_OK':
                 return result['output']['startedTransactionNumberList']
             case _:
