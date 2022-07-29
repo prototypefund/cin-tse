@@ -1888,3 +1888,63 @@ class TSE():
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
+
+    def started_transaction_list(self, user_id: str) -> List[int]:
+        """
+        Get a list of unfinished transaction.
+
+        When an empty string "" is specified, a list of transaction numbers
+        of all incomplete transactions is returned regardless of the
+        user ID.
+
+        **Role: None**
+
+        Args:
+            user_id: The ID of the user who uses the TSE.
+
+        Raises:
+            tse.exceptions.TSEDecommissionedError: If the TSE is
+                decommissioned.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'GetStartedTransactionList',
+            'input': {
+                'clientId': user_id
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'TSE1_ERROR_TSE_DECOMMISSIONED':
+                raise tse_ex.TSEDecommissionedError(
+                    'The TSE is decommissioned.')
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
+                    'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.'
+                )
+            case 'EXECUTION_OK':
+                return result['output']['startedTransactionNumberList']
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')

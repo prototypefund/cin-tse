@@ -1779,6 +1779,78 @@ class TestFinishTransaction:
                     tse.finish_transaction(
                             'pos123', transaction, 'data', 'type')
 
+
+class TestStartedTransactionList:
+    """Tests for te started_transaction_list method of the TSE class."""
+
+    def test_execution_ok(self, connect_response, json_response):
+        """The Execution was OK."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+            json_response['output'] = {'startedTransactionNumberList': [1, 3]}
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                assert tse.started_transaction_list('pos123') == [1, 3]
+
+    def test_tse_needs_self_test(self, json_response):
+        """A TSEAlreadyInitializedError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send',
+                    return_value=json_response
+                    ):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSENeedsSelfTestError):
+                    tse.started_transaction_list('pos123')
+
+    def test_tse_needs_self_test_passed(self, json_response):
+        """A TSEAlreadyInitializedError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send',
+                    return_value=json_response
+                    ):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSENeedsSelfTestError):
+                    tse.started_transaction_list('pos123')
+
+    def test_decommissioned_error(self, json_response):
+        """The TSE is decommissioned."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'TSE1_ERROR_TSE_DECOMMISSIONED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEDecommissionedError):
+                    tse.started_transaction_list('pos123')
+
+    def test_unexpected_error(self, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.started_transaction_list('pos123')
+
     # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
     #     date_time = datetime(2022, 7, 11, 23, 59, 59)
     # #
@@ -1787,6 +1859,7 @@ class TestFinishTransaction:
     #
     #     try:
     #         # tse.factory_reset()
+    #         # tse.initialize('123456', '12345', '54321')
     #         # tse.run_self_test()
     #         # tse.register_secret('EPSONKEY')
     #         # print(tse._get_challenge())
@@ -1794,20 +1867,22 @@ class TestFinishTransaction:
     #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
     #         # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
     #         # tse.logout_user('pos123', TSERole.TIME_ADMIN)
-    #         # tse.register_client('pos123')
+    #         # tse.register_client('pos456')
     #         # tse.deregister_client('test')
     #         # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
     #         # print(tse.client_list())
     #         # tse.update_time('pos123', date_time)
-    #         transaction = tse.start_transaction('pos123', 'data', 'type')
-    #         print(transaction)
-    #         print('\n')
-    #         tse.update_transaction('pos123', transaction, 'data', 'type')
-    #         print(transaction)
-    #         print('\n')
-    #         tse.finish_transaction('pos123', transaction, 'data', 'type')
-    #         print(transaction)
-    #         print('\n')
+    #         # transaction = tse.start_transaction('pos456', 'data', 'type')
+    #         # print(transaction)
+    #         # print('\n')
+    #         # tse.update_transaction('pos123', transaction, 'data', 'type')
+    #         # print(transaction)
+    #         # print('\n')
+    #         # tse.finish_transaction('pos123', transaction, 'data', 'type')
+    #         # print(transaction)
+    #         # print('\n')
+    #
+    #         print(tse.started_transaction_list(''))
     #
     #         # print(transaction.log_time)
     #         # print(transaction.serial_number)
