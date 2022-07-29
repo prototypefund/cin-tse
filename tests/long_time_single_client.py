@@ -81,6 +81,7 @@ try:
     tse.update_time('pos', datetime(2022, 7, 11, 23, 59, 59))
 
     transactions = []
+
     while True:
         if random.choice([True, False]):
             transaction = tse.start_transaction('pos', 'data', 'type')
