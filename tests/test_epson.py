@@ -3,7 +3,7 @@ import pytest
 import socket
 from datetime import datetime, timezone
 from unittest.mock import patch
-from tse import exceptions as tse_ex, TSEState, TSERole
+from tse import exceptions as tse_ex, TSEState, TSERole, TSETransaction
 from tse.epson import _TSEHost, TSE, _hash
 
 
@@ -1590,6 +1590,100 @@ class TestStartTransaction:
                 with pytest.raises(tse_ex.TSEError):
                     tse.start_transaction('pos123', 'data', 'type')
 
+
+class TestFinishTransaction:
+    """Tests for te finish_transaction method of the TSE class."""
+
+    def test_execution_ok(self, connect_response, json_response):
+        """The Execution was OK."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'EXECUTION_OK'
+            json_response['output'] = {
+                    'logTime': '2022-07-11T23:59:59Z',
+                    'signature':
+                    'fXk08EhlHB6EUST/qrKZglzZ+Yzmm2/Y7nlp/w2tm' +
+                    '4I0rJlRzs7nwJVnr7yijatdTML5PTLLUzPjsMNAYHiGfuF' +
+                    '7qBt+MII1/HUTQnnH7JeM5Qe1NduQeiRv2yI66Xrf',
+                    'signatureCounter': 424,
+                    }
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+
+                tse = TSE('TSE_ID', '')
+
+                transaction = TSETransaction(number=1, serial_number='s7d7')
+                tse.finish_transaction('pos123', transaction, 'data', 'type')
+
+                assert transaction.number == 1
+                assert transaction.serial_number == 's7d7'
+                assert transaction.finish_signature.time == \
+                    datetime(2022, 7, 11, 23, 59, 59, tzinfo=timezone.utc)
+                assert transaction.finish_signature.value == \
+                    'fXk08EhlHB6EUST/qrKZglzZ+Yzmm2/Y7nlp/w2tm' \
+                    '4I0rJlRzs7nwJVnr7yijatdTML5PTLLUzPjsMNAYHiGfuF' \
+                    '7qBt+MII1/HUTQnnH7JeM5Qe1NduQeiRv2yI66Xrf'
+                assert transaction.finish_signature.counter == 424
+
+    def test_unauthenticated_user(self, json_response):
+        """No time admin logged in."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                    'OTHER_ERROR_UNAUTHENTICATED_TIME_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+                transaction = TSETransaction(number=1, serial_number='s7d7')
+
+                with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
+                    tse.finish_transaction(
+                            'pos123', transaction, 'data', 'type')
+
+    def test_certificate_expired(self, json_response):
+        """The certificate is expired."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                    'TSE1_ERROR_CERTIFICATE_EXPIRED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+                transaction = TSETransaction(number=1, serial_number='s7d7')
+
+                with pytest.raises(tse_ex.TSECertificateExpiredError):
+                    tse.finish_transaction(
+                            'pos123', transaction, 'data', 'type')
+
+    def test_time_not_set(self, json_response):
+        """The time was not set."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                    'TSE1_ERROR_NO_TIME_SET'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+                transaction = TSETransaction(number=1, serial_number='s7d7')
+
+                with pytest.raises(tse_ex.TSETimeNotSetError):
+                    tse.finish_transaction(
+                            'pos123', transaction, 'data', 'type')
+
+    def test_unexpected_error(self, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+                transaction = TSETransaction(number=1, serial_number='s7d7')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.finish_transaction(
+                            'pos123', transaction, 'data', 'type')
+
     # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
     #     date_time = datetime(2022, 7, 11, 23, 59, 59)
     # #
@@ -1603,16 +1697,19 @@ class TestStartTransaction:
     #         # print(tse._get_challenge())
     #         # tse.initialize('123456', '12345', '54321')
     #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
-    #         tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
+    #         # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
     #         # tse.logout_user('pos123', TSERole.TIME_ADMIN)
     #         # tse.register_client('pos123')
     #         # tse.deregister_client('test')
     #         # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
     #         # print(tse.client_list())
-    #         tse.update_time('pos123', date_time)
+    #         # tse.update_time('pos123', date_time)
     #         transaction = tse.start_transaction('pos123', 'data', 'type')
+    #         print(transaction)
+    #         tse.finish_transaction('pos123', transaction, 'data', 'type')
     #
     #         print(transaction)
+    #
     #         # print(transaction.log_time)
     #         # print(transaction.serial_number)
     #         # print(transaction.signature)
