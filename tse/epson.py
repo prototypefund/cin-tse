@@ -378,7 +378,6 @@ class TSE():
         self._timeout = timeout
         self._secret = secret
 
-    @property
     def info(self) -> TSEInfo:
         """
         Get a bnn.TSEInfo object.

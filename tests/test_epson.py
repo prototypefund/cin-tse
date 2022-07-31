@@ -366,7 +366,7 @@ class TestTSEInfo:
 
             with patch('tse.epson._TSEHost.tse_send', return_value=data):
                 tse = TSE('TSE_ID', '10.0.0.2')
-                tse_info = tse.info
+                tse_info = tse.info()
 
         assert tse_info.public_key ==\
             'BGsUxY6UtXt+TEWfCq/rdA5RA2VSJB4SaKRx4xloHa8cP8Ub/N7k8XFUrJPnuJl'\
@@ -407,7 +407,7 @@ class TestTSEInfo:
                 tse = TSE('TSE_ID', '10.0.0.2')
 
                 with pytest.raises(tse_ex.TSEError):
-                    tse.info
+                    tse.info()
 
 
 class TestGetChallenge:
@@ -1858,9 +1858,9 @@ class TestStartedTransactionList:
     #     tse.open()
     #
     #     try:
-    #         # tse.factory_reset()
-    #         # tse.initialize('123456', '12345', '54321')
-    #         # tse.run_self_test()
+    #         tse.factory_reset()
+    #         tse.run_self_test()
+    #         tse.initialize('123456', '12345', '54321')
     #         # tse.register_secret('EPSONKEY')
     #         # print(tse._get_challenge())
     #         # tse.initialize('123456', '12345', '54321')
@@ -1882,7 +1882,7 @@ class TestStartedTransactionList:
     #         # print(transaction)
     #         # print('\n')
     #
-    #         print(tse.started_transaction_list(''))
+    #         # print(tse.started_transaction_list(''))
     #
     #         # print(transaction.log_time)
     #         # print(transaction.serial_number)
@@ -1890,7 +1890,7 @@ class TestStartedTransactionList:
     #         # print(transaction.signature_counter)
     #         #
     #         # tse.lock(False)
-    #         # print(tse.info)
+    #         print(tse.info)
     #         # print(tse.disable_secure_element())
     #     except Exception as e:
     #         print(e)
