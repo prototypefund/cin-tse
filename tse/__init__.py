@@ -1,5 +1,5 @@
 """The tse package."""
-from typing import Protocol, List
+from typing import Protocol, List, Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 from datetime import datetime
@@ -114,13 +114,13 @@ class TSETransaction:
     serial_number: str
     """The serial number of the TSE."""
 
-    start_signature: TSESignature = None
+    start_signature: Optional[TSESignature] = None
     """The start signature of the transaction."""
 
-    update_signature: TSESignature = None
+    update_signature: Optional[TSESignature] = None
     """The signature of ther last transaction update."""
 
-    finish_signature: str = None
+    finish_signature: Optional[str] = None
     """The finish signature of the transaction."""
 
 
