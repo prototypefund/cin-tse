@@ -20,7 +20,7 @@ class TSERole(Enum):
     TIME_ADMIN = auto()
 
 
-@dataclass(frozen=True)
+@dataclass()
 class TSEInfo:
     """The class to access TSE infomation."""
 
@@ -90,7 +90,7 @@ class TSEInfo:
     """The TSE's software version"""
 
 
-@dataclass(frozen=True)
+@dataclass()
 class TSESignature:
     """The TSE signature representing class."""
 
@@ -120,7 +120,7 @@ class TSETransaction:
     update_signature: Optional[TSESignature] = None
     """The signature of ther last transaction update."""
 
-    finish_signature: Optional[str] = None
+    finish_signature: Optional[TSESignature] = None
     """The finish signature of the transaction."""
 
 

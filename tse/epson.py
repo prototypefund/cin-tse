@@ -459,7 +459,7 @@ class TSE():
 
         return info
 
-    def _get_challenge(self, user_id) -> str:
+    def _get_challenge(self, user_id: str) -> str:
         """
         Get challenge data.
 
@@ -1617,7 +1617,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1636,7 +1636,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+                self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -1653,17 +1653,17 @@ class TSE():
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
             case 'EXECUTION_OK':
-                data = result['output']
+                output = result['output']
 
                 signature = TSESignature(
                     time=datetime.strptime(
-                        data['logTime'], '%Y-%m-%dT%H:%M:%S%z'),
-                    value=data['signature'],
-                    counter=data['signatureCounter'])
+                        output['logTime'], '%Y-%m-%dT%H:%M:%S%z'),
+                    value=output['signature'],
+                    counter=output['signatureCounter'])
 
                 transaction = TSETransaction(
-                    number=data['transactionNumber'],
-                    serial_number=data['serialNumber'],
+                    number=output['transactionNumber'],
+                    serial_number=output['serialNumber'],
                     start_signature=signature)
 
                 return transaction
@@ -1705,7 +1705,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1725,7 +1725,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -1742,13 +1742,13 @@ class TSE():
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
             case 'EXECUTION_OK':
-                data = result['output']
+                output = result['output']
 
                 signature = TSESignature(
                     time=datetime.strptime(
-                        data['logTime'], '%Y-%m-%dT%H:%M:%S%z'),
-                    value=data['signature'],
-                    counter=data['signatureCounter'])
+                        output['logTime'], '%Y-%m-%dT%H:%M:%S%z'),
+                    value=output['signature'],
+                    counter=output['signatureCounter'])
 
                 transaction.update_signature = signature
             case _:
@@ -1789,7 +1789,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1809,7 +1809,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -1826,13 +1826,13 @@ class TSE():
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
             case 'EXECUTION_OK':
-                data = result['output']
+                output = result['output']
 
                 signature = TSESignature(
                     time=datetime.strptime(
-                        data['logTime'], '%Y-%m-%dT%H:%M:%S%z'),
-                    value=data['signature'],
-                    counter=data['signatureCounter'])
+                        output['logTime'], '%Y-%m-%dT%H:%M:%S%z'),
+                    value=output['signature'],
+                    counter=output['signatureCounter'])
 
                 transaction.finish_signature = signature
             case _:
