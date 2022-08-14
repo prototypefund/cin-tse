@@ -356,7 +356,7 @@ class TSE():
             host: str,
             secret: str = 'EPSONKEY',
             ssl: bool = False,
-            timeout: int = 3
+            timeout: int = 5
             ) -> None:
         """
         Initialize the TSE instance.
@@ -401,7 +401,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'COMMON',
                 'vendor': ''
@@ -415,7 +415,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=self._timeout
+            self._tse_id, json_data, timeout=self._timeout
         )
 
         code = result['result']
@@ -489,7 +489,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -505,7 +505,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -599,7 +599,7 @@ class TSE():
             raise ValueError(
                 'The time admin PIN must contain exactly 5 characters.')
 
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -617,7 +617,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -691,7 +691,7 @@ class TSE():
         hash = _hash(challenge, self._secret)
 
         if role == TSERole.ADMIN:
-            data = {
+            json_data = {
                 'storage': {
                     'type': 'TSE',
                     'vendor': 'TSE1'
@@ -708,7 +708,7 @@ class TSE():
                 }
             }
         else:
-            data = {
+            json_data = {
                 'storage': {
                     'type': 'TSE',
                     'vendor': 'TSE1'
@@ -726,7 +726,7 @@ class TSE():
             }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -801,7 +801,7 @@ class TSE():
                     'with TSERole.ADMIN role.'
                 )
 
-            data = {
+            json_data = {
                 'storage': {
                     'type': 'TSE',
                     'vendor': 'TSE1'
@@ -815,7 +815,7 @@ class TSE():
                 }
             }
         else:
-            data = {
+            json_data = {
                 'storage': {
                     'type': 'TSE',
                     'vendor': 'TSE1'
@@ -831,7 +831,7 @@ class TSE():
             }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -915,7 +915,7 @@ class TSE():
         challenge = self._get_challenge('Administrator')
         hash = _hash(challenge, self._secret)
 
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -932,7 +932,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -943,7 +943,7 @@ class TSE():
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
 
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -961,7 +961,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
         error: Optional[tse_ex.TSEError] = None
@@ -1001,7 +1001,7 @@ class TSE():
                 error = tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
 
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1017,7 +1017,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -1061,7 +1061,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1077,7 +1077,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1136,7 +1136,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1152,7 +1152,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1207,7 +1207,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1221,7 +1221,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1262,7 +1262,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1276,7 +1276,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -1305,13 +1305,14 @@ class TSE():
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1326,7 +1327,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1354,13 +1355,14 @@ class TSE():
                 Normally, the TSE host must be restarted.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1376,7 +1378,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1418,10 +1420,9 @@ class TSE():
                 as TSERole.TIME_ADMIN.
             tse.exceptions.TSEInternalError: If an internal TSE error occurred.
                 Normally, the TSE host must be restarted.
-            tse.exceptions.TSEDecommissionedError: If the TSE is
-                decommissioned.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
@@ -1429,7 +1430,7 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1447,14 +1448,11 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
         match code:
-            case 'TSE1_ERROR_TSE_DECOMMISSIONED':
-                raise tse_ex.TSEDecommissionedError(
-                    'The TSE is decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.')
@@ -1494,6 +1492,7 @@ class TSE():
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -1505,7 +1504,7 @@ class TSE():
         else:
             function = 'UnlockTSE'
 
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1519,7 +1518,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1557,18 +1556,17 @@ class TSE():
                 as TSERole.ADMIN.
             tse.exceptions.TSEInternalError: If an internal TSE error occurred.
                 Normally, the TSE host must be restarted.
-            tse.exceptions.TSEDecommissionedError: If the TSE is
-                decommissioned.
             tse.exceptions.TSETimeNotSetError: If the TSE time is not set.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1582,7 +1580,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1591,9 +1589,6 @@ class TSE():
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
                     'the TSE host must be restarted.')
-            case 'TSE1_ERROR_TSE_DECOMMISSIONED':
-                raise tse_ex.TSEDecommissionedError(
-                    'The TSE is decommissioned.')
             case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
                 raise tse_ex.TSEUnauthenticatedUserError(
                     'No user logged in with TSERole.ADMIN role.')
@@ -1632,6 +1627,7 @@ class TSE():
             tse.exceptions.TSETimeNotSetError: If the TSE time is not set.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -1657,7 +1653,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-                self._tse_id, json_data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1720,6 +1716,7 @@ class TSE():
             tse.exceptions.TSETimeNotSetError: If the TSE time is not set.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -1746,7 +1743,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, json_data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1804,6 +1801,7 @@ class TSE():
             tse.exceptions.TSETimeNotSetError: If the TSE time is not set.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -1830,7 +1828,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, json_data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
@@ -1874,18 +1872,17 @@ class TSE():
             user_id: The ID of the user who uses the TSE.
 
         Raises:
-            tse.exceptions.TSEDecommissionedError: If the TSE is
-                decommissioned.
             tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        data = {
+        json_data = {
             'storage': {
                 'type': 'TSE',
                 'vendor': 'TSE1'
@@ -1901,14 +1898,11 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, data, timeout=120)
+            self._tse_id, json_data, timeout=self._timeout)
 
         code = result['result']
 
         match code:
-            case 'TSE1_ERROR_TSE_DECOMMISSIONED':
-                raise tse_ex.TSEDecommissionedError(
-                    'The TSE is decommissioned.')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
                     'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
                 raise tse_ex.TSENeedsSelfTestError(
@@ -1940,6 +1934,14 @@ class TSE():
             tse.exceptions.TSECertificateExpiredError: if the certificate of
                 the TSE is expired.
             tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
         """
         json_data = {
             'storage': {
@@ -2001,7 +2003,7 @@ class TSE():
             json_data['function'] = 'ArchiveExport'
 
         result = self._tse_host.tse_send(
-            self._tse_id, json_data, timeout=120)
+            self._tse_id, json_data, timeout=20)
 
         code = result['result']
 
@@ -2047,7 +2049,7 @@ class TSE():
 
         while True:
             result = self._tse_host.tse_send(
-                self._tse_id, json_data, timeout=120)
+                self._tse_id, json_data, timeout=self._timeout)
 
             code = result['result']
 
@@ -2097,7 +2099,7 @@ class TSE():
             }
 
             result = self._tse_host.tse_send(
-                self._tse_id, json_data, timeout=120)
+                self._tse_id, json_data, timeout=self._timeout)
 
             code = result['result']
 
@@ -2132,7 +2134,7 @@ class TSE():
             }
 
             result = self._tse_host.tse_send(
-                self._tse_id, json_data, timeout=120)
+                self._tse_id, json_data, timeout=self._timeout)
 
             code = result['result']
 

@@ -97,10 +97,6 @@ class TSEInternalError(TSEError):
     """Raised if the an internal TSE error occurs."""
 
 
-class TSEDecommissionedError(TSEError):
-    """Raised if the TSE is decommissioned."""
-
-
 class TSECertificateExpiredError(TSEError):
     """Raised if the TSE certificate is expired."""
 

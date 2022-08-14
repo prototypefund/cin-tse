@@ -1344,20 +1344,6 @@ class TestTSEUpdateTime:
                     tse.update_time(
                         'TEST', datetime(2022, 8, 11, 23, 59, 59))
 
-    def test_decommissioned_error(self, json_response):
-        """The TSE is decommissioned."""
-        with patch('tse.epson._TSEHost.__init__', return_value=None):
-            json_response['result'] = \
-                'TSE1_ERROR_TSE_DECOMMISSIONED'
-
-            with patch(
-                    'tse.epson._TSEHost.tse_send', return_value=json_response):
-                tse = TSE('TSE_ID', '')
-
-                with pytest.raises(tse_ex.TSEDecommissionedError):
-                    tse.update_time(
-                        'TEST', datetime(2022, 8, 11, 23, 59, 59))
-
 
 class TestTSELock:
     """Tests for the lock method of the TSE class."""
@@ -1450,19 +1436,6 @@ class TestTSEDisableSecureElement:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
-                    tse.disable_secure_element()
-
-    def test_decommissioned_error(self, json_response):
-        """The TSE is decommissioned."""
-        with patch('tse.epson._TSEHost.__init__', return_value=None):
-            json_response['result'] = \
-                'TSE1_ERROR_TSE_DECOMMISSIONED'
-
-            with patch(
-                    'tse.epson._TSEHost.tse_send', return_value=json_response):
-                tse = TSE('TSE_ID', '')
-
-                with pytest.raises(tse_ex.TSEDecommissionedError):
                     tse.disable_secure_element()
 
     def test_time_not_set(self, json_response):
@@ -1825,19 +1798,6 @@ class TestStartedTransactionList:
                 tse = TSE('TSE_ID', '')
 
                 with pytest.raises(tse_ex.TSENeedsSelfTestError):
-                    tse.started_transaction_list('pos123')
-
-    def test_decommissioned_error(self, json_response):
-        """The TSE is decommissioned."""
-        with patch('tse.epson._TSEHost.__init__', return_value=None):
-            json_response['result'] = \
-                'TSE1_ERROR_TSE_DECOMMISSIONED'
-
-            with patch(
-                    'tse.epson._TSEHost.tse_send', return_value=json_response):
-                tse = TSE('TSE_ID', '')
-
-                with pytest.raises(tse_ex.TSEDecommissionedError):
                     tse.started_transaction_list('pos123')
 
     def test_unexpected_error(self, json_response):
