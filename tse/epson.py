@@ -617,7 +617,7 @@ class TSE():
         }
 
         result = self._tse_host.tse_send(
-            self._tse_id, json_data, timeout=self._timeout)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
@@ -726,18 +726,18 @@ class TSE():
             }
 
         result = self._tse_host.tse_send(
-            self._tse_id, json_data, timeout=self._timeout)
+            self._tse_id, json_data, timeout=120)
 
         code = result['result']
 
         match code:
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_PUK_CHANGE':
                 raise tse_ex.TSEPukStateError(
-                    'The PUK change required. Maybe the TSE is'
+                    'The PUK change required. Maybe the TSE is '
                     'not initialized')
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_PIN_CHANGE':
                 raise tse_ex.TSEPinStateError(
-                    'The PIN change required. Maybe the TSE is'
+                    'The PIN change required. Maybe the TSE is '
                     'not initialized')
             case 'OTHER_ERROR_INVALID_ADMIN_USER_ID':
                 raise tse_ex.TSELoginError(
@@ -1281,10 +1281,10 @@ class TSE():
         code = result['result']
 
         match code:
-            case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
-                raise tse_ex.TSENotInitializedError(
-                    'The TSE is not initialized.')
-            case 'EXECUTION_OK':
+            # case 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
+            #     raise tse_ex.TSENotInitializedError(
+            #         'The TSE is not initialized.')
+            case 'EXECUTION_OK' | 'TSE1_ERROR_CLIENT_NOT_REGISTERED':
                 return None
             case _:
                 raise tse_ex.TSESelfTestError(
