@@ -1,8 +1,12 @@
 """The tse package."""
-from typing import Protocol, List, Optional
+from typing import Protocol, List, Optional, Tuple, Union
 from dataclasses import dataclass
 from enum import Enum, auto
 from datetime import datetime
+
+
+TimeRangeType = Union[datetime, Tuple[datetime, datetime], None]
+TransactionRangeType = Union[int, Tuple[int, int], None]
 
 
 class TSEState(Enum):

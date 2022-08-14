@@ -5,13 +5,17 @@ In this module the TSE protocol for Epson devices and helpers are implemented.
 """
 import socket
 import json
+from base64 import b64decode
 from datetime import datetime
 from hashlib import sha256
 from base64 import b64encode
 from xml.etree import ElementTree
+from pathlib import Path
 from typing import Optional, List
 from tse import exceptions as tse_ex
-from tse import TSEInfo, TSEState, TSERole, TSETransaction, TSESignature
+from tse import (
+        TSEInfo, TSEState, TSERole, TSETransaction, TSESignature,
+        TransactionRangeType, TimeRangeType)
 
 
 def _hash(challenge: str, secret: str) -> bytes:
@@ -652,6 +656,7 @@ class TSE():
 
         Raises:
             tse.exceptions.TSELoginError: If a login error occurs.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
             tse.exceptions.TSEPinBlockedError: If the PIN was blocked.
             tse.exceptions.TSESecretError: If the secret for authentication
                 was wrong.
@@ -725,6 +730,9 @@ class TSE():
                 raise tse_ex.TSELoginError(
                     'Only the "Administrator" user can be logged in '
                     'with TSERole.ADMIN role.')
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.')
             case 'TSE1_ERROR_AUTHENTICATION_FAILED':
                 remaining_retries = result['output']['remainingRetries']
 
@@ -1897,3 +1905,236 @@ class TSE():
             case _:
                 raise tse_ex.TSEError(
                     f'Unexpected TSE error occures: {code}.')
+
+    def export(
+            self,
+            filename: Path,
+            user_id: str,
+            transaction: TransactionRangeType = None,
+            time: TimeRangeType = None):
+        """
+        Export the TSE logs.
+
+        Raises:
+            FileNotFoundError: If the given path does not exist.
+            tse.exceptions.TSEArgumentTypeError: If the type of an
+                argument is wrong
+            tse.exceptions.TSENoUserError: If the user_id string is
+                empty or None.
+            tse.exceptions.TSEUnauthenticatedUserError: If no user logged in
+                as TSERole.ADMIN.
+            tse.exceptions.TSETimeNotSetError: If the time is not set.
+            tse.exceptions.TSECertificateExpiredError: if the certificate of
+                the TSE is expired.
+            tse.exceptions.TSENeedsSelfTestError: If TSE needs a self test.
+        """
+        json_data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        if not user_id:
+            raise tse_ex.TSENoUserError(
+                    'The TSE user_id must not be an empty string.')
+
+        if time and transaction:
+            raise tse_ex.TSEArgumentError(
+                'Export can be filtered by time or transaction only. Using '
+                'both filters at the same time is not possible.')
+
+        if transaction and not time:
+            if isinstance(transaction, tuple):
+                json_data['function'] =\
+                    'ExportFilteredByTransactionNumberInterval'
+                json_data['input'] = {
+                    'clientId': user_id,
+                    'startTransactionNumber': transaction[0],
+                    'endTransactionNumber': transaction[1]
+                }
+            elif isinstance(transaction, int):
+                json_data['function'] = 'ExportFilteredByTransactionNumber'
+                json_data['input'] = {
+                    'clientId': user_id,
+                    'transactionNumber': transaction,
+                }
+
+            else:
+                raise tse_ex.TSEArgumentTypeError(
+                    'The transaction parameter must be an interger or '
+                    'a tuple of integer.')
+
+        if time and not transaction:
+            if isinstance(time, tuple):
+                json_data['function'] =\
+                    'ExportFilteredByPeriodOfTime'
+                json_data['input'] = {
+                    'clientId': user_id,
+                    'startDate': time[0].isoformat(timespec='seconds') + 'Z',
+                    'endDate': time[1].isoformat(timespec='seconds') + 'Z'
+                }
+
+            else:
+                raise tse_ex.TSEArgumentTypeError(
+                    'The time parameter must be a tuple of datetime.')
+
+        if not transaction and not time:
+            json_data['function'] = 'ArchiveExport'
+
+        result = self._tse_host.tse_send(
+            self._tse_id, json_data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
+                    'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
+                raise tse_ex.TSENeedsSelfTestError(
+                    f'The TSE {self._tse_id} needs a self test.')
+            case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                raise tse_ex.TSECertificateExpiredError(
+                    f'The certificate of the TSE {self._tse_id} is '
+                    'expired.')
+            case 'OTHER_ERROR_CURRENTLY_EXPORTING':
+                raise tse_ex.TSEAlreadyExportingError(
+                    'The TSE is already exporting. Please wait a little.')
+            case 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER':
+                raise tse_ex.TSEUnauthenticatedUserError(
+                    'No user logged in with TSERole.ADMIN role.')
+            case 'OTHER_ERROR_NO_TIME_SET_BEFORE_EXPORT':
+                raise tse_ex.TSETimeNotSetError(
+                    'The time was not set before export.')
+            case 'EXECUTION_OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures during the export: {code}.')
+
+        json_data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'GetExportData',
+            'input': {},
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        error = None
+        data = b''
+
+        while True:
+            result = self._tse_host.tse_send(
+                self._tse_id, json_data, timeout=120)
+
+            code = result['result']
+
+            match code:
+                case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                    raise tse_ex.TSECertificateExpiredError(
+                        f'The certificate of the TSE {self._tse_id} is '
+                        'expired.')
+                case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
+                        'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
+                    error = tse_ex.TSENeedsSelfTestError(
+                        f'The TSE {self._tse_id} needs a self test.')
+                case 'TSE1_ERROR_EXPORT_NO_DATA_AVAILABLE':
+                    error = tse_ex.TSENoDataToExportError(
+                        'No data to exort available. Please edit the '
+                        'export filter.')
+                    break
+                case 'EXECUTION_OK':
+                    status = result['output']['exportStatus']
+
+                    if status == 'EXPORT_INCOMPETE':
+                        data += result['output']['exportData'].encode()
+
+                    if status == 'EXPORT_COMPLETE':
+                        data += result['output']['exportData'].encode()
+
+                        break
+                case _:
+                    error = tse_ex.TSEError(
+                        'Unexpected TSE error occures during loading '
+                        f'the export data: {code}.')
+                    break
+
+        if not error:
+            json_data = {
+                'storage': {
+                    'type': 'TSE',
+                    'vendor': 'TSE1'
+                },
+                'function': 'FinalizeExport',
+                'input': {
+                    'deleteData': False},
+                'compress': {
+                    'required': False,
+                    'type': ''
+                }
+            }
+
+            result = self._tse_host.tse_send(
+                self._tse_id, json_data, timeout=120)
+
+            code = result['result']
+
+            match code:
+                case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                    raise tse_ex.TSECertificateExpiredError(
+                        f'The certificate of the TSE {self._tse_id} is '
+                        'expired.')
+                case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
+                        'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
+                    raise tse_ex.TSENeedsSelfTestError(
+                        f'The TSE {self._tse_id} needs a self test.')
+                case 'EXECUTION_OK':
+                    filename.write_bytes(b64decode(data))
+                case _:
+                    raise tse_ex.TSEError(
+                        'Unexpected TSE error occures during the '
+                        f'export finalization: {code}.')
+
+        else:
+            json_data = {
+                'storage': {
+                    'type': 'TSE',
+                    'vendor': 'TSE1'
+                },
+                'function': 'CancelExport',
+                'input': {},
+                'compress': {
+                    'required': False,
+                    'type': ''
+                }
+            }
+
+            result = self._tse_host.tse_send(
+                self._tse_id, json_data, timeout=120)
+
+            code = result['result']
+
+            match code:
+                case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                    raise tse_ex.TSECertificateExpiredError(
+                        f'The certificate of the TSE {self._tse_id} is '
+                        'expired.')
+                case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST' | \
+                        'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED':
+                    raise tse_ex.TSENeedsSelfTestError(
+                        f'The TSE {self._tse_id} needs a self test.')
+                case 'EXECUTION_OK':
+                    return
+                case _:
+                    raise tse_ex.TSEError(
+                        'Unexpected TSE error occures during export '
+                        f'canceling: {code}.')

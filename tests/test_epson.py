@@ -1,6 +1,7 @@
 """Tests for the Epson TSE backend."""
 import pytest
 import socket
+from pathlib import Path
 from datetime import datetime, timezone
 from unittest.mock import patch
 from tse import exceptions as tse_ex, TSEState, TSERole, TSETransaction
@@ -1851,27 +1852,156 @@ class TestStartedTransactionList:
                 with pytest.raises(tse_ex.TSEError):
                     tse.started_transaction_list('pos123')
 
+
+class TestExport:
+    """Tests for the export method of the TSE class."""
+
+    def test_empty_user_id_string(self):
+        """The user_id is an empty string."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            tse = TSE('TSE_ID', '')
+
+            with pytest.raises(tse_ex.TSENoUserError):
+                tse.export(Path('/home/lluar/tse.tar.gz'), '')
+
+    def test_wrong_tranaction_type(self):
+        """The transaction argument type is wrong."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            tse = TSE('TSE_ID', '')
+
+            with pytest.raises(tse_ex.TSEArgumentTypeError, match='transaction'):
+                tse.export(
+                    Path('/home/lluar/tse.tar.gz'),
+                    'pos2',
+                    transaction='wrong')
+
+    def test_wrong_time_type(self):
+        """The time argument type is wrong."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            tse = TSE('TSE_ID', '')
+
+            with pytest.raises(tse_ex.TSEArgumentTypeError, match='time'):
+                tse.export(
+                    Path('/home/lluar/tse.tar.gz'),
+                    'pos2',
+                    time='wrong')
+
+    def test_time_and_transaction(self):
+        """Time and transaction filters were passed."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            tse = TSE('TSE_ID', '')
+
+            with pytest.raises(tse_ex.TSEArgumentError):
+                tse.export(
+                    Path('/home/lluar/tse.tar.gz'),
+                    'pos2',
+                    transaction=1,
+                    time=(
+                        datetime(2022, 8, 11, 23, 59, 59),
+                        datetime(2022, 8, 11, 23, 59, 59)))
+
+    def test_tse_needs_self_test_passed(self, json_response):
+        """A TSEAlreadyInitializedError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST_PASSED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send',
+                    return_value=json_response
+                    ):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSENeedsSelfTestError):
+                    tse.export('test/tse.tar.gz', 'pos2')
+
+    def test_certificate_expired(self, json_response):
+        """The certificate was expired."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'TSE1_ERROR_CERTIFICATE_EXPIRED'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.export('test/tse.tar.gz', 'pos2')
+
+    def test_already_exporting(self, json_response):
+        """The TSE is already exporting."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'OTHER_ERROR_CURRENTLY_EXPORTING'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEAlreadyExportingError):
+                    tse.export('test/tse.tar.gz', 'pos2')
+
+    def test_no_admin_user_logged_in(self, json_response):
+        """There is no logged in Admin user."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'OTHER_ERROR_UNAUTHENTICATED_ADMIN_USER'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEUnauthenticatedUserError):
+                    tse.export('test/tse.tar.gz', 'pos2')
+
+    def test_time_not_set(self, json_response):
+        """The TSE time is not set."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = \
+                'OTHER_ERROR_NO_TIME_SET_BEFORE_EXPORT'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSETimeNotSetError):
+                    tse.export('test/tse.tar.gz', 'pos2')
+
+    def test_unexpected_error(self, json_response):
+        """A TSEError occurred."""
+        with patch('tse.epson._TSEHost.__init__', return_value=None):
+            json_response['result'] = 'XYZ'
+
+            with patch(
+                    'tse.epson._TSEHost.tse_send', return_value=json_response):
+                tse = TSE('TSE_ID', '')
+
+                with pytest.raises(tse_ex.TSEError):
+                    tse.export('test/tse.tar.gz', 'pos2')
     # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
     #     date_time = datetime(2022, 7, 11, 23, 59, 59)
-    # #
+    #
     #     tse = TSE(epson_tse_id, epson_tse_host_ip)
     #     tse.open()
     #
     #     try:
-    #         tse.factory_reset()
-    #         tse.run_self_test()
-    #         tse.initialize('123456', '12345', '54321')
+    #         # tse.factory_reset()
+    #         # tse.run_self_test()
+    #         # tse.initialize('123456', '12345', '54321')
     #         # tse.register_secret('EPSONKEY')
     #         # print(tse._get_challenge())
     #         # tse.initialize('123456', '12345', '54321')
-    #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
     #         # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
     #         # tse.logout_user('pos123', TSERole.TIME_ADMIN)
     #         # tse.register_client('pos456')
     #         # tse.deregister_client('test')
     #         # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
     #         # print(tse.client_list())
-    #         # tse.update_time('pos123', date_time)
+    #
+    #         tse.login_user('Administrator', TSERole.ADMIN, '12345')
+    #         tse.update_time('Administrator', date_time)
+    #         # start = datetime(2022, 5, 11, 23, 59, 59)
+    #         # end = datetime(2022, 8, 11, 23, 59, 59)
+    #         tse.export(Path('/home/lluar/tse.tar.gz'), 'pos2')
+    #
+    #
     #         # transaction = tse.start_transaction('pos456', 'data', 'type')
     #         # print(transaction)
     #         # print('\n')
@@ -1881,6 +2011,7 @@ class TestStartedTransactionList:
     #         # tse.finish_transaction('pos123', transaction, 'data', 'type')
     #         # print(transaction)
     #         # print('\n')
+    #         # tse.cancel_export()
     #
     #         # print(tse.started_transaction_list(''))
     #
@@ -1890,7 +2021,7 @@ class TestStartedTransactionList:
     #         # print(transaction.signature_counter)
     #         #
     #         # tse.lock(False)
-    #         print(tse.info)
+    #         # print(tse.info())
     #         # print(tse.disable_secure_element())
     #     except Exception as e:
     #         print(e)

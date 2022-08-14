@@ -16,11 +16,11 @@ try:
     logging.info('Open the TSE.')
     tse.open()
 
-    # logging.info('Initialize the TSE.')
-    # tse.initialize('123456', '12345', '54321')
-    #
-    # logging.info('Run self test.')
-    # tse.run_self_test()
+    logging.info('Initialize the TSE.')
+    tse.initialize('123456', '12345', '54321')
+
+    logging.info('Run self test.')
+    tse.run_self_test()
 
     logging.info('Login Administrator user.')
     tse.login_user('Administrator', TSERole.ADMIN, '12345')
