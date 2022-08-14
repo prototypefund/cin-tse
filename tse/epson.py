@@ -45,8 +45,8 @@ class _TSEHost:
     During the initialization of the instance, a socket connection to the
     TSE host is established. To send data to the TSE, the respective TSE must
     be opened and then closed again. If the TSE is used exclusively by only
-    one client, then this can also remain open. Opening and closing before
-    and after writing is only necessary if several clients share a TSE.
+    one user, then this can also remain open. Opening and closing before
+    and after writing is only necessary if several users share a TSE.
 
     .. code:: python
 
@@ -336,8 +336,10 @@ class TSE():
     This class implements the TSE protocol defined in the tse module.
     To send data to the TSE, the respective TSE must
     be opened and then closed again. If the TSE is used exclusively by only
-    one client, then this can also remain open. Opening and closing before
-    and after writing is only necessary if several clients share a TSE.
+    one user, then this can also remain open. Opening and closing before
+    and after writing is only necessary if several users share a TSE.
+    If the TSE is currently being used by another user, then a TSEInUseError
+    is raised.
 
     .. code:: python
 
@@ -345,7 +347,6 @@ class TSE():
 
         tse.open()
         # some operation
-        tse.initialize('12345', '12345', '54321')
         tse.close()
     """
 
@@ -384,7 +385,9 @@ class TSE():
 
     def info(self) -> TSEInfo:
         """
-        Get a bnn.TSEInfo object.
+        Get a :class:`tse.TSEInfo` object.
+
+        The TSEInfo object provides information about the TSE and its state.
 
         **Role: None**
 
@@ -465,16 +468,21 @@ class TSE():
 
     def _get_challenge(self, user_id: str) -> str:
         """
-        Get challenge data.
+        Get challenge.
 
-        The data is used to calculate the hash value required
+        The challenge is used to calculate the hash value required
         for user authentication.
 
         **Role: None**
 
+        Args:
+            user_id: The ID of the user for whom a challenge should
+                be requested.
+
         Raises:
             tse.exceptions.TSEInUseError: If the TSE is in use.
-            tse.exceptions.TSEOpenError: If the TSE could not be opened.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
             tse.exceptions.TSEError: If an unexpected TSE error occurred.
             tse.exceptions.ConnectionTimeoutError: If a socket timeout
                 occurred.
@@ -553,6 +561,9 @@ class TSE():
         """
         Initialize the TSE device.
 
+        Before the TSE can be used, it must be initialized. During the
+        initialization the PUK, the PIN for the TSERole.TIME_ADMIN and the PIN
+        for the TSERole.ADMIN are set.
         The maximum length of the PUK is 6 characters and the maximum length
         for PINs is 5 characters.
 
@@ -1020,7 +1031,7 @@ class TSE():
 
     def register_user(self, user_id: str) -> None:
         """
-        Registers user ID to be used in the TSE.
+        Register user ID to be used in the TSE.
 
         The maximum length of the ID is 30 characters.
 
