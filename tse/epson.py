@@ -1911,7 +1911,7 @@ class TSE():
             filename: Path,
             user_id: str,
             transaction: TransactionRangeType = None,
-            time: TimeRangeType = None):
+            time: TimeRangeType = None) -> None:
         """
         Export the TSE logs.
 
@@ -2029,7 +2029,7 @@ class TSE():
             }
         }
 
-        error = None
+        error: Optional[tse_ex.TSEError] = None
         data = b''
 
         while True:
