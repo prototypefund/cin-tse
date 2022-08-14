@@ -17,8 +17,20 @@ class TSEError(Exception):
     """Base exception for all TSE error."""
 
 
+class TSEArgumentError(TSEError):
+    """Raised if argument error occurs."""
+
+
+class TSEArgumentTypeError(TSEError):
+    """Raised if argument type is worng."""
+
+
 class TSEInUseError(TSEError):
     """Raised if TSE is in use."""
+
+
+class TSEAlreadyExportingError(TSEError):
+    """Raised if TSE is already exporting."""
 
 
 class TSEOpenError(TSEError):
@@ -73,6 +85,10 @@ class TSEPinBlockedError(TSEError):
     """Raised if a TSE login PIN was blocked."""
 
 
+class TSENoUserError(TSEError):
+    """Raise if no TSE user given."""
+
+
 class TSESecretError(TSEError):
     """Raised if the secret is no correct."""
 
@@ -103,3 +119,7 @@ class TSEPinError(TSEError):
 
 class TSEUnfinishedTransactionError(TSEError):
     """Raised if a transaction is unfinished."""
+
+
+class TSENoDataToExportError(TSEError):
+    """Raised if a no data to export available."""
