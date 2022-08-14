@@ -470,7 +470,7 @@ class TestTSEInitialize:
                 connect_response
             ]
 
-            with pytest.raises(ValueError, match='Admin PIN'):
+            with pytest.raises(ValueError, match='admin PIN'):
                 tse = TSE('TSE_ID', '10.0.0.2')
                 tse.initialize('123456', '123456', '54321')
 
@@ -481,7 +481,7 @@ class TestTSEInitialize:
                 connect_response
             ]
 
-            with pytest.raises(ValueError, match='Time Admin PIN'):
+            with pytest.raises(ValueError, match='time admin PIN'):
                 tse = TSE('TSE_ID', '10.0.0.2')
                 tse.initialize('123456', '12345', '654321')
 
@@ -1975,54 +1975,55 @@ class TestExport:
 
                 with pytest.raises(tse_ex.TSEError):
                     tse.export('test/tse.tar.gz', 'pos2')
-    def test_tmp(self, epson_tse_host_ip, epson_tse_id):
-        date_time = datetime(2022, 7, 11, 23, 59, 59)
 
-        tse = TSE(epson_tse_id, epson_tse_host_ip)
-        tse.open()
-
-        try:
-            tse.factory_reset()
-            # tse.run_self_test()
-            tse.initialize('12345', '12345', '54321')
-            # tse.register_secret('EPSONKEY')
-            # print(tse._get_challenge())
-            # tse.initialize('123456', '12345', '54321')
-            # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
-            # tse.logout_user('pos123', TSERole.TIME_ADMIN)
-            # tse.register_client('pos456')
-            # tse.deregister_client('test')
-            # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
-            # print(tse.client_list())
-
-            # tse.login_user('Administrator', TSERole.ADMIN, '12345')
-            # tse.update_time('Administrator', date_time)
-            # start = datetime(2022, 5, 11, 23, 59, 59)
-            # end = datetime(2022, 8, 11, 23, 59, 59)
-            # tse.export(Path('/home/lluar/tse.tar.gz'), 'pos2')
-
-
-            # transaction = tse.start_transaction('pos456', 'data', 'type')
-            # print(transaction)
-            # print('\n')
-            # tse.update_transaction('pos123', transaction, 'data', 'type')
-            # print(transaction)
-            # print('\n')
-            # tse.finish_transaction('pos123', transaction, 'data', 'type')
-            # print(transaction)
-            # print('\n')
-            # tse.cancel_export()
-
-            # print(tse.started_transaction_list(''))
-
-            # print(transaction.log_time)
-            # print(transaction.serial_number)
-            # print(transaction.signature)
-            # print(transaction.signature_counter)
-            #
-            # tse.lock(False)
-            # print(tse.info())
-            # print(tse.disable_secure_element())
-        except Exception as e:
-            print(e)
-        tse.close()
+    # def test_tmp(self, epson_tse_host_ip, epson_tse_id):
+    #     date_time = datetime(2022, 7, 11, 23, 59, 59)
+    #
+    #     tse = TSE(epson_tse_id, epson_tse_host_ip)
+    #     tse.open()
+    #
+    #     try:
+    #         tse.factory_reset()
+    #         # tse.run_self_test()
+    #         tse.initialize('12345', '12345', '54321')
+    #         # tse.register_secret('EPSONKEY')
+    #         # print(tse._get_challenge())
+    #         # tse.initialize('123456', '12345', '54321')
+    #         # tse.login_user('pos123', TSERole.TIME_ADMIN, '54321')
+    #         # tse.logout_user('pos123', TSERole.TIME_ADMIN)
+    #         # tse.register_client('pos456')
+    #         # tse.deregister_client('test')
+    #         # tse.change_pin(TSERole.TIME_ADMIN, '123456', '54321')
+    #         # print(tse.client_list())
+    #
+    #         # tse.login_user('Administrator', TSERole.ADMIN, '12345')
+    #         # tse.update_time('Administrator', date_time)
+    #         # start = datetime(2022, 5, 11, 23, 59, 59)
+    #         # end = datetime(2022, 8, 11, 23, 59, 59)
+    #         # tse.export(Path('/home/lluar/tse.tar.gz'), 'pos2')
+    #
+    #
+    #         # transaction = tse.start_transaction('pos456', 'data', 'type')
+    #         # print(transaction)
+    #         # print('\n')
+    #         # tse.update_transaction('pos123', transaction, 'data', 'type')
+    #         # print(transaction)
+    #         # print('\n')
+    #         # tse.finish_transaction('pos123', transaction, 'data', 'type')
+    #         # print(transaction)
+    #         # print('\n')
+    #         # tse.cancel_export()
+    #
+    #         # print(tse.started_transaction_list(''))
+    #
+    #         # print(transaction.log_time)
+    #         # print(transaction.serial_number)
+    #         # print(transaction.signature)
+    #         # print(transaction.signature_counter)
+    #         #
+    #         # tse.lock(False)
+    #         # print(tse.info())
+    #         # print(tse.disable_secure_element())
+    #     except Exception as e:
+    #         print(e)
+    #     tse.close()

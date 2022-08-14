@@ -564,21 +564,20 @@ class TSE():
         Before the TSE can be used, it must be initialized. During the
         initialization the PUK, the PIN for the TSERole.TIME_ADMIN and the PIN
         for the TSERole.ADMIN are set.
-        The maximum length of the PUK is 6 characters and the maximum length
-        for PINs is 5 characters.
+        The length of the PUK is exactly 6 characters and the length
+        for PINs is exactly 5 characters.
 
         **Role: None**
 
         Args:
             puk: The PUK of the TSE device.
-            admin_pin: The Pin of the Admin role.
-            time_admin_pin: The PIN of the Time Admin role.
+            admin_pin: The Pin of the TSERole.ADMIN.
+            time_admin_pin: The PIN of the TSERole.TIME_ADMIN.
 
         Raise:
-            ValueError: If the PUK or PIN is too long.
-            tse.exceptions.TSECertificateExpiredError: if the certificate of
-                the TSE is expired. Either the validity of the certificate has
-                expired or the TSE was decommissioned.
+            ValueError: If the lenght of PUK or PIN is not correct.
+            tse.exceptions.TSECertificateExpiredError: If the certificate of
+                the TSE is expired.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -591,13 +590,14 @@ class TSE():
             tse.exceptions.ConnectionError: If there is no connection to
                 the host.
         """
-        if len(puk) > 6:
-            raise ValueError('The PUK is too long (maximum 6 character).')
-        elif len(admin_pin) > 5:
-            raise ValueError('The Admin PIN is to long (maximum 5 character)')
-        elif len(time_admin_pin) > 5:
+        if len(puk) != 6:
+            raise ValueError('The PUK must contain exactly 6 characters.')
+        elif len(admin_pin) != 5:
             raise ValueError(
-                'The Time Admin PIN is to long (maximum 5 character)')
+                'The admin PIN must contain exactly 5 characters.')
+        elif len(time_admin_pin) != 5:
+            raise ValueError(
+                'The time admin PIN must contain exactly 5 characters.')
 
         data = {
             'storage': {
@@ -648,10 +648,12 @@ class TSE():
         """
         Login a user with specific role.
 
-        Roles are used to restrict the calling of certain properties and
-        methods. There are two possible roles Admin and the TimeAdmin.
-        The role needed to call a method is described in the documentation
-        of the method.
+        A user can be any previously created user or the TSE user
+        *Administrator*. Roles are used to restrict the calling
+        of certain properties and
+        methods. There are two possible roles TSERole.ADMIN and
+        TSERole.TIME_ADMIN. The role needed to call a method is
+        described in the documentation of the method.
 
         .. note::
             The TSERole.ADMIN will be logged out automatically after 15
@@ -772,7 +774,7 @@ class TSE():
         **Role: None**
 
         Args:
-            user_id: The user ID. For Admin role only the "Administrator" user
+            user_id: The user ID. For Admin role only the *Administrator* user
                 is allowed. For TimeAdmin all user IDs are allowed.
             role: A TSERole.
 
