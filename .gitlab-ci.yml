@@ -1,0 +1,6 @@
+test:backend:python3.10:
+  stage: test
+  image: python:3.10
+  script:
+    - pip install .[develop]
+    - python -m pytest
