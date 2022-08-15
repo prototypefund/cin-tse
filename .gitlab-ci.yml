@@ -4,3 +4,4 @@ test:backend:python3.10:
   script:
     - pip install .[develop]
     - python -m pytest
+    - mypy tse
