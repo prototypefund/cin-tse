@@ -1,7 +1,24 @@
-test:backend:python3.10:
-  stage: test
+stages:
+  - test
+  - release
+#test:backend:python3.10:
+#  stage: test
+#  image: python:3.10
+#  script:
+#    - pip install .[develop]
+#    - python -m pytest
+#    - mypy tse
+
+pages:
+  stage: release
   image: python:3.10
   script:
     - pip install .[develop]
-    - python -m pytest
-    - mypy tse
+    - cd docs
+    - make html
+    - mv build/html ../public
+  artifacts:
+    paths:
+      - public
+#  only:
+#    - tags
