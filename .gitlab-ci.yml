@@ -45,8 +45,8 @@ packages:
   stage: release
   image: curlimages/curl:latest
   script:
-  - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "build/tse.py-${PACKAGE_VERSION}.tar.gz" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tse.py/${PACKAGE_VERSION}/bnn-${PACKAGE_VERSION}.tar.gz"'
-  - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "build/tse.py-${PACKAGE_VERSION}-py3-none-any.whl" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tse.py/${PACKAGE_VERSION}/bnn-${PACKAGE_VERSION}-py3-none-any.whl"'
+  - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "build/tse.py-${PACKAGE_VERSION}.tar.gz" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tse.py/${PACKAGE_VERSION}/tse.py-${PACKAGE_VERSION}.tar.gz"'
+  - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "build/tse.py-${PACKAGE_VERSION}-py3-none-any.whl" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/tse.py/${PACKAGE_VERSION}/tse.py-${PACKAGE_VERSION}-py3-none-any.whl"'
   artifacts:
     paths:
       - build
