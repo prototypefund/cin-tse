@@ -383,6 +383,58 @@ class TSE():
         self._timeout = timeout
         self._secret = secret
 
+    def _get_challenge(self, user_id: str) -> str:
+        """
+        Get challenge.
+
+        The challenge is used to calculate the hash value required
+        for user authentication.
+
+        **Role: None**
+
+        Args:
+            user_id: The ID of the user for whom a challenge should
+                be requested.
+
+        Raises:
+            tse.exceptions.TSEInUseError: If the TSE is in use.
+            tse.exceptions.TSEOpenError: If the TSE is not open.
+            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
+            tse.exceptions.TSEError: If an unexpected TSE error occurred.
+            tse.exceptions.ConnectionTimeoutError: If a socket timeout
+                occurred.
+            tse.exceptions.ConnectionError: If there is no connection to
+                the host.
+        """
+        json_data = {
+            'storage': {
+                'type': 'TSE',
+                'vendor': 'TSE1'
+            },
+            'function': 'GetChallenge',
+            'input': {
+                'userId': user_id
+            },
+            'compress': {
+                'required': False,
+                'type': ''
+            }
+        }
+
+        result = self._tse_host.tse_send(
+            self._tse_id, json_data, timeout=120)
+
+        code = result['result']
+
+        match code:
+            case 'EXECUTION_OK':
+                pass
+            case _:
+                raise tse_ex.TSEError(
+                    f'Unexpected TSE error occures: {code}.')
+
+        return result['output']['challenge']
+
     def info(self) -> TSEInfo:
         """
         Get a :class:`tse.TSEInfo` object.
@@ -465,58 +517,6 @@ class TSE():
         )
 
         return info
-
-    def _get_challenge(self, user_id: str) -> str:
-        """
-        Get challenge.
-
-        The challenge is used to calculate the hash value required
-        for user authentication.
-
-        **Role: None**
-
-        Args:
-            user_id: The ID of the user for whom a challenge should
-                be requested.
-
-        Raises:
-            tse.exceptions.TSEInUseError: If the TSE is in use.
-            tse.exceptions.TSEOpenError: If the TSE is not open.
-            tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
-            tse.exceptions.TSEError: If an unexpected TSE error occurred.
-            tse.exceptions.ConnectionTimeoutError: If a socket timeout
-                occurred.
-            tse.exceptions.ConnectionError: If there is no connection to
-                the host.
-        """
-        json_data = {
-            'storage': {
-                'type': 'TSE',
-                'vendor': 'TSE1'
-            },
-            'function': 'GetChallenge',
-            'input': {
-                'userId': user_id
-            },
-            'compress': {
-                'required': False,
-                'type': ''
-            }
-        }
-
-        result = self._tse_host.tse_send(
-            self._tse_id, json_data, timeout=120)
-
-        code = result['result']
-
-        match code:
-            case 'EXECUTION_OK':
-                pass
-            case _:
-                raise tse_ex.TSEError(
-                    f'Unexpected TSE error occures: {code}.')
-
-        return result['output']['challenge']
 
     def open(self) -> None:
         """
@@ -1420,6 +1420,8 @@ class TSE():
                 as TSERole.TIME_ADMIN.
             tse.exceptions.TSEInternalError: If an internal TSE error occurred.
                 Normally, the TSE host must be restarted.
+            tse.exceptions.TSECertificateExpiredError: If the certificate of
+                the TSE is expired.
             tse.exceptions.TSEInUseError: If the TSE is in use.
             tse.exceptions.TSEOpenError: If the TSE is not open.
             tse.exceptions.TSETimeoutError: If TSE timeout error occurred.
@@ -1456,6 +1458,9 @@ class TSE():
             case 'TSE1_ERROR_WRONG_STATE_NEEDS_SELF_TEST':
                 raise tse_ex.TSENeedsSelfTestError(
                     f'The TSE {self._tse_id} needs a self test.')
+            case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
+                raise tse_ex.TSECertificateExpiredError(
+                    f'The certificate of the TSE {self._tse_id} is expired.')
             case 'TSE1_ERROR_NOT_AUTHORIZED':
                 raise tse_ex.TSEInternalError(
                     'A internal TSE error occurred. Normally, '
@@ -1663,9 +1668,7 @@ class TSE():
                     'No user logged in with TSERole.TIME_ADMIN role.')
             case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
                 raise tse_ex.TSECertificateExpiredError(
-                    f'The certificate of the TSE {self._tse_id} is expired. '
-                    'Either the validity of the certificate has expired or '
-                    'the TSE was decommissioned.')
+                    f'The certificate of the TSE {self._tse_id} is expired.')
             case 'TSE1_ERROR_NO_TIME_SET':
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
@@ -1753,9 +1756,7 @@ class TSE():
                     'No user logged in with TSERole.TIME_ADMIN role.')
             case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
                 raise tse_ex.TSECertificateExpiredError(
-                    f'The certificate of the TSE {self._tse_id} is expired. '
-                    'Either the validity of the certificate has expired or '
-                    'the TSE was decommissioned.')
+                    f'The certificate of the TSE {self._tse_id} is expired.')
             case 'TSE1_ERROR_NO_TIME_SET':
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
@@ -1838,9 +1839,7 @@ class TSE():
                     'No user logged in with TSERole.TIME_ADMIN role.')
             case 'TSE1_ERROR_CERTIFICATE_EXPIRED':
                 raise tse_ex.TSECertificateExpiredError(
-                    f'The certificate of the TSE {self._tse_id} is expired. '
-                    'Either the validity of the certificate has expired or '
-                    'the TSE was decommissioned.')
+                    f'The certificate of the TSE {self._tse_id} is expired.')
             case 'TSE1_ERROR_NO_TIME_SET':
                 raise tse_ex.TSETimeNotSetError(
                     'The TSE time is not set.')
@@ -1918,12 +1917,53 @@ class TSE():
             filename: Path,
             user_id: str,
             transaction: TransactionRangeType = None,
-            time: TimeRangeType = None) -> None:
+            time: TimeRangeType = None,
+            delete_data: bool = False) -> None:
         """
         Export the TSE logs.
 
+        This method exports the application data, system messages, audit
+        logs, and log data stored in the TSE in a standardized file format.
+        The exported files are stored in a TAR archive.
+        The data is exported for the respective user and can be optionally
+        deleted from the TSE after the export.
+        It is possible to export only certain records. The records can be
+        filtered by transaction numbers or time ranges, but for the filtered
+        export only one filter, either transaction or time, may be passed,
+        otherwise the *TSEArgumentError* will be raised.
+
+        .. note::
+            If filtered data is exported, then it cannot be deleted.
+
+        The following sample code exports all logs of a user and deletes
+        the data from the TSE after export.
+
+        .. code:: python
+
+            tse = TSE(<tse_id>, <ip_address>)
+            tse.open()
+            tse.login_user('Administrator', TSERole.ADMIN, <admin_pin>)
+            tse.export(Path(<path_to_file>), <user_id>)
+            tse.close()
+
+        **Role: TSERole.ADMIN**
+
+        Args:
+            filename: The filename including the path to the file where
+                the data will be saved.
+            user_id: The ID of the user whose logs should be exported.
+            transaction: The transaction ID or a range of transaction IDs.
+                The range for transactions must be passed as a tuple with two
+                integers. The first one is the start transaction and the
+                second is the end transaction. If only one transaction should
+                be filtered, then the transaction ID must be passed as integer.
+            time: The time range as tuple of datetime. First item is the start
+                time and the second one is the end time.
+
         Raises:
             FileNotFoundError: If the given path does not exist.
+            tse.exceptions.TSEArgumentError: If transaction and time
+                filter passed.
             tse.exceptions.TSEArgumentTypeError: If the type of an
                 argument is wrong
             tse.exceptions.TSENoUserError: If the user_id string is
@@ -2091,7 +2131,7 @@ class TSE():
                 },
                 'function': 'FinalizeExport',
                 'input': {
-                    'deleteData': False},
+                    'deleteData': delete_data},
                 'compress': {
                     'required': False,
                     'type': ''
