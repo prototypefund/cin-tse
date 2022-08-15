@@ -33,8 +33,8 @@ build:
     - cp dist/* build
     - export PACKAGE_VERSION=`python -m setup --version`
     - echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> build.env
-  only:
-    - tags
+ # only:
+ #   - tags
   artifacts:
     reports:
       dotenv: build.env
@@ -50,6 +50,6 @@ packages:
   artifacts:
     paths:
       - build
-  only:
-    - tags
+  #only:
+  #  - tags
   needs: ["build"]
