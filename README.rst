@@ -14,5 +14,6 @@ Currently, TSEs from Epson are supported. Support for other manufacturers
 is planned for the future.
 
 Documentation: `https://ccodein.gitlab.io/tse.py <https://ccodein.gitlab.io/tse.py>`_
+
 Gitlab Project: `https://gitlab.com/ccodein/tse.py <https://gitlab.com/ccodein/tse.py>`_
 
