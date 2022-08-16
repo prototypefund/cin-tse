@@ -2,7 +2,7 @@ stages:
   - test
   - release
 
-test:backend:python3.10:
+test:python3.10:
   stage: test
   image: python:3.10
   script:
@@ -23,6 +23,7 @@ pages:
       - public
   only:
     - tags
+  needs: ["test:python3.10"]
 
 build:
   stage: release
@@ -36,6 +37,7 @@ build:
     - echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> build.env
   only:
     - tags
+  needs: ["test:python3.10"]
   artifacts:
     reports:
       dotenv: build.env
