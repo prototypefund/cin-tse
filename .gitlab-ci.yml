@@ -1,13 +1,14 @@
 stages:
   - test
   - release
-#test:backend:python3.10:
-#  stage: test
-#  image: python:3.10
-#  script:
-#    - pip install .[develop]
-#    - python -m pytest
-#    - mypy tse
+
+test:backend:python3.10:
+  stage: test
+  image: python:3.10
+  script:
+    - pip install .[develop]
+    - python -m pytest
+    - mypy tse
 
 pages:
   stage: release
@@ -20,8 +21,8 @@ pages:
   artifacts:
     paths:
       - public
-#  only:
-#    - tags
+  only:
+    - tags
 
 build:
   stage: release
@@ -33,8 +34,8 @@ build:
     - cp dist/* build
     - export PACKAGE_VERSION=`python -m setup --version`
     - echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> build.env
- # only:
- #   - tags
+  only:
+    - tags
   artifacts:
     reports:
       dotenv: build.env
@@ -50,6 +51,6 @@ packages:
   artifacts:
     paths:
       - build
-  #only:
-  #  - tags
+  only:
+    - tags
   needs: ["build"]
