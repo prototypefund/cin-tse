@@ -38,9 +38,10 @@ See: :class:`tse.TSEInfo`
 
 .. code:: python
 
+    from tse import TSEType
     from tse.epson import TSE
 
-    tse = TSE(<tse_id>, <host_ip>)
+    tse: TSEType = TSE(<tse_id>, <host_ip>)
     tse.open()
 
     try:
@@ -64,6 +65,8 @@ To create users, a user with the TSERole.ADMIN role must be logged
 in. The only user who can assume this role is the Adminstrator user. 
 This user is an internal user that does not need to be created.
 
+The following flowchart shows the initialization procedure:
+
 .. mermaid::
 
     flowchart TD
@@ -73,11 +76,14 @@ This user is an internal user that does not need to be created.
         D --> E[register client]
         E --> F[logout TSERole.ADMIN]
 
+Example code:
+
 .. code:: python
 
+    from tse import TSEType
     from tse.epson import TSE
 
-    tse = TSE(<tse_id>, <host_ip>)
+    tse: TSEType = TSE(<tse_id>, <host_ip>)
     tse.open()
 
     try:
@@ -107,6 +113,8 @@ false and most functions will raise the *TSENeedsSelfTestError* exception.
 Now, you have to perform a self-test. After performing the self-test, you 
 need to update the time again.
 
+The flowchart shows the flow for daily use:
+
 .. mermaid::
 
     flowchart TD
@@ -117,12 +125,15 @@ need to update the time again.
         E --> F[update TSE time]
         F --> G[logout TSERole.TIME_ADMIN]
 
+Example code:
+
 .. code:: python
 
+    from tse import TSEType
     from tse.epson import TSE
     from datetime import datetime
 
-    tse = TSE(<tse_id>, <host_ip>)
+    tse: TSEType = TSE(<tse_id>, <host_ip>)
     tse.open()
     try:
         date_time = datetime(2022, 7, 11, 23, 59, 59)
@@ -146,12 +157,15 @@ The data stored in the TSE can be exported for archiving or for
 transfer to the fiscal authorities.
 Only the Adminstrator user can export the data.
 
+Example code:
+
 .. code:: python
 
+    from tse import TSEType
     from tse.epson import TSE
     from datetime import datetime
 
-    tse = TSE(<tse_id>, <host_ip>)
+    tse: TSEType = TSE(<tse_id>, <host_ip>)
     tse.open()
     try:
         tse.login_user('Administrator', TSERole.ADMIN, '12345')

@@ -27,6 +27,10 @@ To interact with the TSEs, the package implements a vendor-independent API.
 Currently, TSEs from Epson are supported. Support for other manufacturers 
 is planned for the future.
 
+.. note:: 
+   If you are interested in support for a specific backend, please contact
+   us via the issue tracker on our Gitlab page.
+
 .. toctree::
    :caption: Links
    :maxdepth: 1
