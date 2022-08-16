@@ -333,7 +333,9 @@ class TSE():
     """
     The TSE implementation for the Epson TSE.
 
-    See: :class:`tse.TSE` object.
+    This class implements the TSEType protocol defined in the tse module.
+
+    See: :class:`tse.TSEType` object.
     """
 
     def __init__(
@@ -422,7 +424,7 @@ class TSE():
         return result['output']['challenge']
 
     def info(self) -> TSEInfo:
-        """See: :meth:`tse.TSE.info`."""
+        """See: :meth:`tse.TSEType.info`."""
         json_data = {
             'storage': {
                 'type': 'COMMON',
@@ -489,11 +491,11 @@ class TSE():
         return info
 
     def open(self) -> None:
-        """See: :meth:`tse.TSE.open`."""
+        """See: :meth:`tse.TSEType.open`."""
         self._tse_host.tse_open(self._tse_id)
 
     def close(self) -> None:
-        """See: :meth:`tse.TSE.close`."""
+        """See: :meth:`tse.TSEType.close`."""
         self._tse_host.tse_close(self._tse_id)
 
     def initialize(
@@ -502,7 +504,7 @@ class TSE():
             admin_pin: str,
             time_admin_pin: str
             ) -> None:
-        """See: :meth:`tse.TSE.initialize`."""
+        """See: :meth:`tse.TSEType.initialize`."""
         if len(puk) != 6:
             raise ValueError('The PUK must contain exactly 6 characters.')
         elif len(admin_pin) != 5:
@@ -558,7 +560,7 @@ class TSE():
             role: TSERole,
             pin: str,
             ) -> None:
-        """See: :meth:`tse.TSE.login_user`."""
+        """See: :meth:`tse.TSEType.login_user`."""
         challenge = self._get_challenge(user_id)
 
         hash = _hash(challenge, self._secret)
@@ -641,7 +643,7 @@ class TSE():
             user_id: str,
             role: TSERole,
             ) -> None:
-        """See: :meth:`tse.TSE.logout_user`."""
+        """See: :meth:`tse.TSEType.logout_user`."""
         if role == TSERole.ADMIN:
             if user_id != 'Administrator':
                 raise tse_ex.TSELogoutError(
@@ -711,7 +713,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def change_pin(self, role: TSERole, puk: str, new_pin: str) -> None:
-        """See: :meth:`tse.TSE.change_pin`."""
+        """See: :meth:`tse.TSEType.change_pin`."""
         if role == TSERole.ADMIN:
             function = 'UnblockUserForAdmin'
         elif role == TSERole.TIME_ADMIN:
@@ -837,7 +839,7 @@ class TSE():
             raise error
 
     def register_user(self, user_id: str) -> None:
-        """See: :meth:`tse.TSE.register_user`."""
+        """See: :meth:`tse.TSEType.register_user`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -881,7 +883,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def deregister_user(self, user_id: str) -> None:
-        """See: :meth:`tse.TSE.deregister_user`."""
+        """See: :meth:`tse.TSEType.deregister_user`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -928,7 +930,7 @@ class TSE():
                     f'Unexpected TSE error occures: {result}.')
 
     def user_list(self) -> List[str]:
-        """See: :meth:`tse.TSE.user_list`."""
+        """See: :meth:`tse.TSEType.user_list`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -967,7 +969,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def run_self_test(self) -> None:
-        """See: :meth:`tse.TSE.run_self_test`."""
+        """See: :meth:`tse.TSEType.run_self_test`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1045,7 +1047,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def register_secret(self, secret: str) -> None:
-        """See: :meth:`tse.TSE.register_secret`."""
+        """See: :meth:`tse.TSEType.register_secret`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1085,7 +1087,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def update_time(self, user_id: str, time: datetime) -> None:
-        """See: :meth:`tse.TSE.update_time`."""
+        """See: :meth:`tse.TSEType.update_time`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1130,7 +1132,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def lock(self, state: bool) -> None:
-        """See: :meth:`tse.TSE.lock`."""
+        """See: :meth:`tse.TSEType.lock`."""
         if state:
             function = 'LockTSE'
         else:
@@ -1174,7 +1176,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def disable_secure_element(self) -> None:
-        """See: :meth:`tse.TSE.disable_secure_element`."""
+        """See: :meth:`tse.TSEType.disable_secure_element`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1218,7 +1220,7 @@ class TSE():
             user_id: str,
             data: str,
             type: str) -> TSETransaction:
-        """See: :meth:`tse.TSE.start_transaction`."""
+        """See: :meth:`tse.TSEType.start_transaction`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1277,7 +1279,7 @@ class TSE():
             transaction: TSETransaction,
             data: str,
             type: str) -> None:
-        """See: :meth:`tse.TSE.update_transaction`."""
+        """See: :meth:`tse.TSEType.update_transaction`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1332,7 +1334,7 @@ class TSE():
             transaction: TSETransaction,
             data: str,
             type: str) -> None:
-        """See: :meth:`tse.TSE.finish_transaction`."""
+        """See: :meth:`tse.TSEType.finish_transaction`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1382,7 +1384,7 @@ class TSE():
                     f'Unexpected TSE error occures: {code}.')
 
     def started_transaction_list(self, user_id: str) -> List[int]:
-        """See: :meth:`tse.TSE.started_transaction_list`."""
+        """See: :meth:`tse.TSEType.started_transaction_list`."""
         json_data = {
             'storage': {
                 'type': 'TSE',
@@ -1421,7 +1423,7 @@ class TSE():
             transaction: TransactionRangeType = None,
             time: TimeRangeType = None,
             delete_data: bool = False) -> None:
-        """See: :meth:`tse.TSE.export`."""
+        """See: :meth:`tse.TSEType.export`."""
         json_data = {
             'storage': {
                 'type': 'TSE',

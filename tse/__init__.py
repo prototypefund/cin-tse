@@ -129,7 +129,7 @@ class TSETransaction:
     """The finish signature of the transaction."""
 
 
-class TSE(Protocol):
+class TSEType(Protocol):
     """
     The TSE implementation for the Epson TSE.
 
