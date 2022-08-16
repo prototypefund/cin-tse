@@ -12,6 +12,7 @@ The tse.py package
    :caption: Contents:
 
    usage
+   specs
    API <api/tse>
 
 A Python package to access security modules (TSE) of the German 
